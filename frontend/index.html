@@ -3,276 +3,627 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Concert Booking System - Virtual Queue & Fixed Gateways</title>
+  <title>ConcertQueueEngine - Virtual Queue & Fixed Payment Gateways</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-main: #0c0f17;
-      --bg-card: #151a26;
-      --bg-card-subtle: #1c2233;
-      --border-color: #262f45;
-      --text-main: #f0f4fc;
-      --text-muted: #8b9bb4;
-      --accent: #6366f1;
-      --accent-hover: #4f46e5;
-      --green: #10b981;
+      --bg-base: #090d16;
+      --bg-surface: #111726;
+      --bg-elevated: #182033;
+      --bg-card: #141c2e;
+      --border-subtle: #212c44;
+      --border-strong: #2f3e61;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-subtle: rgba(99, 102, 241, 0.15);
+      --emerald: #10b981;
+      --emerald-subtle: rgba(16, 185, 129, 0.15);
       --amber: #f59e0b;
-      --red: #ef4444;
-      --blue: #3b82f6;
+      --amber-subtle: rgba(245, 158, 11, 0.15);
+      --rose: #f43f5e;
+      --rose-subtle: rgba(244, 63, 94, 0.15);
+      --cyan: #06b6d4;
+      --cyan-subtle: rgba(6, 182, 212, 0.15);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background-color: var(--bg-main);
-      color: var(--text-main);
-      padding: 24px;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      padding: 24px 20px;
       line-height: 1.5;
+      min-height: 100vh;
     }
 
-    .container {
-      max-width: 1200px;
+    .app-container {
+      max-width: 1280px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
       gap: 24px;
     }
 
+    /* Top Navigation / Header */
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid var(--border-color);
-      padding-bottom: 16px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      flex-wrap: wrap;
+      gap: 16px;
     }
 
-    h1 { font-size: 1.5rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
-    .badge {
-      font-size: 0.75rem;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-    .badge-primary { background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.4); }
-    .badge-free { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid #059669; }
-    .badge-busy { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #d97706; }
-    .badge-reconciling { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid #2563eb; }
-
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-    }
-    @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
-
-    .card {
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    }
-
-    .card-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin-bottom: 16px;
-      color: #fff;
+    .brand {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-    }
-
-    .stat-row {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
       gap: 12px;
-      margin-bottom: 20px;
     }
-    .stat-box {
-      background: var(--bg-card-subtle);
-      border: 1px solid var(--border-color);
-      padding: 12px;
-      border-radius: 8px;
-      text-align: center;
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--primary), #a855f7);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
     }
-    .stat-num { font-size: 1.4rem; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; }
-    .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
-
-    /* Gateway cards */
-    .gateways-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 16px;
-      margin-top: 12px;
-    }
-    .gw-card {
-      background: var(--bg-card-subtle);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 16px;
-      position: relative;
-      overflow: hidden;
-    }
-    .gw-card.busy { border-color: var(--amber); }
-    .gw-card.free { border-color: var(--green); }
-    .gw-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 6px; }
-    .gw-meta { font-size: 0.8rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; word-break: break-all; }
-
-    /* Form & Booking */
-    .form-group { margin-bottom: 16px; }
-    label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
-    input, select {
-      width: 100%;
-      background: var(--bg-card-subtle);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 10px 14px;
+    .brand-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
       color: #fff;
-      font-size: 0.95rem;
     }
-    button {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      padding: 12px 20px;
-      font-size: 0.95rem;
+    .brand-subtitle {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Pill Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
       font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
-      width: 100%;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 5px 10px;
+      border-radius: 9999px;
     }
-    button:hover { background: var(--accent-hover); }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .badge-primary { background: var(--primary-subtle); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3); }
+    .badge-free { background: var(--emerald-subtle); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-busy { background: var(--amber-subtle); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-rose { background: var(--rose-subtle); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
 
-    .btn-secondary {
-      background: var(--bg-card-subtle);
-      border: 1px solid var(--border-color);
-      color: var(--text-main);
+    /* Live Telemetry Bar */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
     }
-    .btn-secondary:hover { background: #262f45; }
-
-    .status-banner {
-      padding: 16px;
-      border-radius: 8px;
-      margin-top: 16px;
-      background: var(--bg-card-subtle);
-      border: 1px solid var(--border-color);
+    .stat-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
+      transition: border-color 0.2s, transform 0.2s;
     }
-    .status-highlight {
-      font-size: 1.25rem;
+    .stat-card:hover {
+      border-color: var(--border-strong);
+      transform: translateY(-1px);
+    }
+    .stat-header {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      display: flex;
+      justify-content: space-between;
+    }
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: #fff;
+    }
+
+    /* Main Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 960px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Cards */
+    .panel-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 14px;
+    }
+    .panel-title {
+      font-size: 1.15rem;
       font-weight: 700;
       color: #fff;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
-    .pulse {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
+    /* Event Hero Details */
+    .event-hero {
+      background: linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-surface) 100%);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .event-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #fff;
+    }
+    .event-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+    }
+    .event-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Form Fields */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    input[type="text"], input[type="number"], select {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input[type="text"]:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: #222d44;
+      border-color: var(--border-strong);
+    }
+    .btn-danger {
+      background: rgba(244, 63, 94, 0.15);
+      color: #fda4af;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+    .btn-danger:hover {
+      background: rgba(244, 63, 94, 0.25);
+    }
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* Queue Status Stage */
+    .queue-status-box {
+      border-radius: var(--radius-md);
+      padding: 20px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-strong);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: fadeIn 0.3s ease;
+    }
+    .status-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+    .pulse-dot {
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
       background: var(--amber);
-      animation: pulseAnim 1.5s infinite;
+      box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+      animation: pulseAnim 1.6s infinite;
     }
+    .pulse-dot.blue { background: var(--cyan); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); }
+    .pulse-dot.green { background: var(--emerald); animation: none; }
+    .pulse-dot.red { background: var(--rose); animation: none; }
+
     @keyframes pulseAnim {
       0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
-      70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+      70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
       100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+    }
+
+    .queue-progress-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      background: var(--bg-surface);
+      padding: 14px;
+      border-radius: var(--radius-sm);
+    }
+    .queue-progress-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .queue-progress-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .queue-progress-val {
+      font-size: 1.3rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      color: #fff;
+    }
+
+    /* Confirmed Ticket Pass */
+    .ticket-pass {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(6, 182, 212, 0.12) 100%);
+      border: 1px dashed var(--emerald);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .ticket-pass-title {
+      color: #34d399;
+      font-weight: 700;
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ticket-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+    }
+    .ticket-meta-label { font-size: 0.75rem; color: var(--text-muted); }
+    .ticket-meta-val { font-size: 0.95rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+    /* Gateway Grid */
+    .gateway-cards-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+    }
+    .gw-box {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s ease;
+    }
+    .gw-box.busy {
+      border-color: rgba(245, 158, 11, 0.5);
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, var(--bg-elevated) 100%);
+    }
+    .gw-box.free {
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+    .gw-box-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .gw-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .gw-details {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* Tab Switcher */
+    .tabs-header {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 8px;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      color: #fff;
+      background: var(--bg-elevated);
+    }
+
+    /* History Table */
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin-top: 10px;
+    }
+    .history-table th {
+      text-align: left;
+      padding: 10px 12px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+    }
+    .history-table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="app-container">
+    <!-- Header -->
     <header>
-      <div>
-        <h1>🎸 Concert Ticket Booking System</h1>
-        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">
-          Sub-theme 1: Virtual Queue with Fixed Payment Gateways & Atomic Consistency
-        </p>
+      <div class="brand">
+        <div class="brand-icon">🎫</div>
+        <div>
+          <div class="brand-title">ConcertQueueEngine</div>
+          <div class="brand-subtitle">Virtual Queue & Fixed Payment Gateways System</div>
+        </div>
       </div>
-      <div>
+      <div class="header-actions">
         <span class="badge badge-primary" id="node-tag">Node: Loading...</span>
+        <span class="badge badge-free" id="dispatch-pill">Dispatch Active</span>
       </div>
     </header>
 
     <!-- Operational Telemetry Bar -->
-    <div class="stat-row">
-      <div class="stat-box">
-        <div class="stat-num" id="stat-avail">-</div>
-        <div class="stat-label">Available Seats</div>
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-header">Available Seats <span>Inventory</span></div>
+        <div class="stat-value" id="stat-avail" style="color: var(--text-primary);">-</div>
       </div>
-      <div class="stat-box">
-        <div class="stat-num" id="stat-held" style="color: var(--amber);">-</div>
-        <div class="stat-label">Held Seats</div>
+      <div class="stat-card">
+        <div class="stat-header">Held Seats <span>In Transaction</span></div>
+        <div class="stat-value" id="stat-held" style="color: var(--amber);">-</div>
       </div>
-      <div class="stat-box">
-        <div class="stat-num" id="stat-sold" style="color: var(--green);">-</div>
-        <div class="stat-label">Sold Seats</div>
+      <div class="stat-card">
+        <div class="stat-header">Sold Seats <span>Confirmed</span></div>
+        <div class="stat-value" id="stat-sold" style="color: var(--emerald);">-</div>
       </div>
-      <div class="stat-box">
-        <div class="stat-num" id="stat-queue" style="color: var(--blue);">-</div>
-        <div class="stat-label">Waiting in Queue</div>
+      <div class="stat-card">
+        <div class="stat-header">Queue Depth <span>Waiting</span></div>
+        <div class="stat-value" id="stat-queue" style="color: var(--cyan);">-</div>
       </div>
     </div>
 
-    <div class="grid-2">
-      <!-- User Booking Panel -->
-      <div class="card">
-        <div class="card-title">
-          <span>User Ticket Booking</span>
-          <span class="badge badge-primary">Event: Global Rock Fest 2026</span>
+    <!-- Main Two-Column Workflow -->
+    <div class="main-grid">
+      <!-- Left Column: User Booking Portal & Live Queue Status -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <div class="panel-title">🎟️ Ticket Booking Portal</div>
+          <span class="badge badge-primary" id="event-status-badge">Sale Active</span>
         </div>
 
-        <div class="form-group">
-          <label>Your User Account ID</label>
-          <input type="text" id="user-id-input" value="usr_00001">
+        <!-- Event Hero Box -->
+        <div class="event-hero">
+          <div class="event-title" id="event-title">Global Rock Fest 2026</div>
+          <div class="event-meta-row">
+            <div class="event-meta-item">📍 <span id="event-venue">National Arena</span></div>
+            <div class="event-meta-item">📅 <span id="event-date">December 2026</span></div>
+            <div class="event-meta-item">💵 <strong id="event-price" style="color: #fff;">$150.00</strong></div>
+          </div>
         </div>
 
-        <button id="book-btn" onclick="joinQueue()">Join Queue & Book Ticket ($150.00)</button>
+        <!-- Navigation Tabs for Left Panel -->
+        <div class="tabs-header">
+          <button class="tab-btn active" id="tab-book" onclick="switchLeftTab('book')">Book Ticket</button>
+          <button class="tab-btn" id="tab-history" onclick="switchLeftTab('history')">My Bookings</button>
+        </div>
 
-        <!-- Dynamic Queue & Confirmation View -->
-        <div id="booking-status-card" class="status-banner" style="display: none;">
-          <div class="status-highlight" id="queue-state-badge">
-            <span class="pulse"></span> Status: WAITING
+        <!-- Tab 1: Booking Form & Active Queue Status -->
+        <div id="panel-booking-view" style="display: flex; flex-direction: column; gap: 18px;">
+          <div class="form-group">
+            <label>User Account Identifier</label>
+            <input type="text" id="user-id-input" value="usr_00001" placeholder="e.g. usr_00001 or fan_jane">
           </div>
-          <div style="font-size: 0.9rem;" id="queue-details">
-            Queue Sequence: <strong id="q-seq">-</strong> | People Ahead: <strong id="q-ahead">-</strong>
+
+          <button id="book-btn" class="btn btn-primary" onclick="joinQueue()">
+            Enter Queue & Book Ticket
+          </button>
+
+          <!-- Active Queue State Box -->
+          <div id="queue-box" class="queue-status-box" style="display: none;">
+            <div class="status-top-bar">
+              <div class="status-indicator" id="status-title">
+                <span class="pulse-dot"></span>
+                <span>In Queue: WAITING</span>
+              </div>
+              <span id="polling-indicator" style="font-size: 0.72rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">
+                polling...
+              </span>
+            </div>
+
+            <div class="queue-progress-grid">
+              <div class="queue-progress-item">
+                <span class="queue-progress-label">Your Queue Sequence</span>
+                <span class="queue-progress-val" id="q-seq-val">-</span>
+              </div>
+              <div class="queue-progress-item">
+                <span class="queue-progress-label">Users Ahead of You</span>
+                <span class="queue-progress-val" id="q-ahead-val" style="color: var(--amber);">-</span>
+              </div>
+            </div>
+
+            <!-- Confirmed Ticket View -->
+            <div id="confirmed-ticket-view" class="ticket-pass" style="display: none;">
+              <div class="ticket-pass-title">
+                🎉 Ticket Confirmed & Guaranteed
+              </div>
+              <div class="ticket-meta-grid">
+                <div>
+                  <div class="ticket-meta-label">Confirmed Seat</div>
+                  <div class="ticket-meta-val" id="ticket-seat-label" style="color: #34d399;">-</div>
+                </div>
+                <div>
+                  <div class="ticket-meta-label">Booking Reference</div>
+                  <div class="ticket-meta-val" id="ticket-ref-val" style="font-size: 0.8rem;">-</div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div id="ticket-info" style="display: none; color: var(--green); margin-top: 8px;">
-            🎉 <strong>Confirmed Booking!</strong><br>
-            Seat Assigned: <strong id="ticket-seat">-</strong><br>
-            Booking Reference: <code id="ticket-booking-id">-</code>
+        </div>
+
+        <!-- Tab 2: Booking History -->
+        <div id="panel-history-view" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 0.88rem; color: var(--text-secondary);">Your Confirmed Bookings</span>
+            <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.78rem;" onclick="loadUserBookings()">Refresh</button>
+          </div>
+          <div id="history-container">
+            <p style="font-size: 0.85rem; color: var(--text-muted); text-align: center; padding: 20px;">Loading bookings...</p>
           </div>
         </div>
       </div>
 
-      <!-- Real-Time Gateways Visualizer -->
-      <div class="card">
-        <div class="card-title">
-          <span>Fixed Payment Gateways Monitor</span>
-          <span id="dispatch-status" class="badge badge-free">Dispatch Active</span>
+      <!-- Right Column: Fixed Payment Gateways & Real-Time Orchestrator -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <div class="panel-title">⚡ Fixed Payment Gateways Monitor</div>
+          <span class="badge badge-primary" id="gateways-count-badge">3 Gateways</span>
         </div>
-        <p style="font-size: 0.85rem; color: var(--text-muted);">
-          Each gateway processes exactly one active payment at a time. When capacity frees, the next FIFO user is atomically assigned.
+
+        <p style="font-size: 0.84rem; color: var(--text-secondary);">
+          Each payment gateway processes exactly one active transaction at a time. As soon as a transaction terminates (success or failure), the capacity is released and the next waiting user is atomically dispatched.
         </p>
 
-        <div class="gateways-grid" id="gateways-container">
+        <!-- Gateway Cards -->
+        <div class="gateway-cards-container" id="gateways-container">
           <!-- Dynamically populated -->
         </div>
 
-        <!-- Controls -->
-        <div style="margin-top: 20px; display: flex; gap: 10px;">
-          <button class="btn-secondary" onclick="togglePauseDispatch()" id="pause-btn">Pause Dispatch</button>
-          <button class="btn-secondary" onclick="quickBatchQueue(10)">+ Simulate 10 Queued Users</button>
-          <button class="btn-secondary" style="color: #f87171;" onclick="resetDemo()">Reset Demo</button>
+        <!-- Cluster Operational Controls -->
+        <div style="border-top: 1px solid var(--border-subtle); padding-top: 16px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">
+            Cluster Simulation Controls
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <button class="btn btn-secondary" id="pause-btn" onclick="togglePauseDispatch()">Pause Dispatch</button>
+            <button class="btn btn-secondary" onclick="simulateTraffic(10)">+ Queue 10 Users</button>
+          </div>
+          <button class="btn btn-danger" onclick="resetDemoSystem()">Reset Demo & Inventory</button>
         </div>
       </div>
     </div>
@@ -280,8 +631,40 @@
 
   <script>
     const EVENT_ID = 'evt_concert_2026';
-    let pollInterval = null;
-    let isPaused = false;
+    let pollTimer = null;
+    let pollIntervalMs = 800; // Exponential backoff starts at 800ms
+    let consecutiveUnchanged = 0;
+    let lastKnownPosition = null;
+    let isDispatchPaused = false;
+
+    // --- On Page Load: Restore session & initial fetch ---
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedUser = localStorage.getItem('cqe_user_id');
+      if (savedUser) {
+        document.getElementById('user-id-input').value = savedUser;
+      }
+
+      fetchEventDetails();
+      fetchDashboard();
+      setInterval(fetchDashboard, 1500);
+
+      // Check if user was already in queue or has active booking
+      checkExistingQueueStatus();
+    });
+
+    async function fetchEventDetails() {
+      try {
+        const res = await fetch(`/events/${EVENT_ID}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        document.getElementById('event-title').textContent = data.title;
+        document.getElementById('event-venue').textContent = data.venue;
+        document.getElementById('event-price').textContent = `$${(data.priceMinor / 100).toFixed(2)}`;
+        document.getElementById('event-status-badge').textContent = data.saleStatus === 'ACTIVE' ? 'Sale Active' : data.saleStatus;
+      } catch (e) {
+        console.error('Error fetching event details:', e);
+      }
+    }
 
     async function fetchDashboard() {
       try {
@@ -295,22 +678,23 @@
         document.getElementById('stat-sold').textContent = data.seats.sold.toLocaleString();
         document.getElementById('stat-queue').textContent = data.queue.waiting.toLocaleString();
 
-        isPaused = data.dispatchPaused;
+        isDispatchPaused = data.dispatchPaused;
         const pauseBtn = document.getElementById('pause-btn');
-        const dispStatus = document.getElementById('dispatch-status');
-        if (isPaused) {
-          dispStatus.textContent = 'Dispatch Paused';
-          dispStatus.className = 'badge badge-busy';
+        const dispPill = document.getElementById('dispatch-pill');
+        if (isDispatchPaused) {
+          dispPill.textContent = 'Dispatch Paused';
+          dispPill.className = 'badge badge-busy';
           pauseBtn.textContent = 'Resume Dispatch';
         } else {
-          dispStatus.textContent = 'Dispatch Active';
-          dispStatus.className = 'badge badge-free';
+          dispPill.textContent = 'Dispatch Active';
+          dispPill.className = 'badge badge-free';
           pauseBtn.textContent = 'Pause Dispatch';
         }
 
+        document.getElementById('gateways-count-badge').textContent = `${data.gateways.length} Gateways`;
         renderGateways(data.gateways);
       } catch (err) {
-        console.error('Error fetching dashboard:', err);
+        console.error('Error polling dashboard:', err);
       }
     }
 
@@ -320,25 +704,30 @@
 
       gateways.forEach(gw => {
         const div = document.createElement('div');
-        div.className = `gw-card ${gw.status.toLowerCase()}`;
+        const isBusy = gw.status === 'BUSY';
+        div.className = `gw-box ${isBusy ? 'busy' : 'free'}`;
         div.innerHTML = `
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div class="gw-name">Gateway ${gw.gatewayId}</div>
-            <span class="badge badge-${gw.status.toLowerCase()}">${gw.status}</span>
+          <div class="gw-box-top">
+            <span class="gw-title">Gateway ${gw.gatewayId}</span>
+            <span class="badge ${isBusy ? 'badge-busy' : 'badge-free'}">${gw.status}</span>
           </div>
-          <div class="gw-meta" style="margin-top: 8px;">
-            Gen: ${gw.generation}<br>
-            Assignment: ${gw.currentAssignmentId ? gw.currentAssignmentId.substring(0, 16) + '...' : 'Idle'}
+          <div class="gw-details">
+            Generation: #${gw.generation}<br>
+            Assignment: ${gw.currentAssignmentId ? gw.currentAssignmentId.substring(0, 16) + '...' : 'Idle (Awaiting FIFO)'}
           </div>
         `;
         container.appendChild(div);
       });
     }
 
+    // --- Queue Management with Smart Exponential Backoff ---
     async function joinQueue() {
       const userId = document.getElementById('user-id-input').value.trim();
-      const btn = document.getElementById('book-btn');
-      btn.disabled = true;
+      if (!userId) return alert('Please enter a user ID');
+      localStorage.setItem('cqe_user_id', userId);
+
+      const bookBtn = document.getElementById('book-btn');
+      bookBtn.disabled = true;
 
       try {
         const res = await fetch(`/events/${EVENT_ID}/queue`, {
@@ -351,67 +740,201 @@
           body: JSON.stringify({})
         });
         const data = await res.json();
-        startPollingUserStatus(userId);
+        startAdaptivePolling(userId);
       } catch (err) {
-        alert('Failed to join queue: ' + err.message);
-        btn.disabled = false;
+        alert('Could not join queue: ' + err.message);
+        bookBtn.disabled = false;
       }
     }
 
-    function startPollingUserStatus(userId) {
-      if (pollInterval) clearInterval(pollInterval);
-      document.getElementById('booking-status-card').style.display = 'flex';
+    async function checkExistingQueueStatus() {
+      const userId = document.getElementById('user-id-input').value.trim();
+      if (!userId) return;
 
-      pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`/events/${EVENT_ID}/queue/me`, {
+          headers: { 'x-user-id': userId }
+        });
+        const data = await res.json();
+        if (data.status && data.status !== 'NOT_IN_QUEUE') {
+          // Reusing existing active entry after page refresh per HLD Section 5
+          startAdaptivePolling(userId);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function startAdaptivePolling(userId) {
+      if (pollTimer) clearTimeout(pollTimer);
+      document.getElementById('queue-box').style.display = 'flex';
+      pollIntervalMs = 800; // Reset to base rate
+      consecutiveUnchanged = 0;
+
+      async function pollLoop() {
         try {
           const res = await fetch(`/events/${EVENT_ID}/queue/me`, {
             headers: { 'x-user-id': userId }
           });
           const data = await res.json();
+          const shouldContinue = updateQueueStatusUI(data);
 
-          const stateBadge = document.getElementById('queue-state-badge');
-          const qSeq = document.getElementById('q-seq');
-          const qAhead = document.getElementById('q-ahead');
-          const ticketInfo = document.getElementById('ticket-info');
-
-          qSeq.textContent = data.queueSequence || '-';
-          qAhead.textContent = data.positionAhead !== undefined ? data.positionAhead : '-';
-
-          if (data.status === 'WAITING') {
-            stateBadge.innerHTML = `<span class="pulse"></span> Status: WAITING (Position ${data.positionAhead + 1})`;
-          } else if (data.status === 'PROCESSING') {
-            stateBadge.innerHTML = `<span class="pulse" style="background: var(--blue);"></span> Status: PROCESSING PAYMENT...`;
-          } else if (data.status === 'CONFIRMED') {
-            stateBadge.innerHTML = `✅ Status: TICKET CONFIRMED!`;
-            if (data.booking) {
-              ticketInfo.style.display = 'block';
-              document.getElementById('ticket-seat').textContent = data.booking.seatLabel;
-              document.getElementById('ticket-booking-id').textContent = data.booking.bookingId;
+          if (shouldContinue) {
+            // Adaptive backoff: if position hasn't changed for multiple ticks, back off up to 5s
+            if (data.positionAhead === lastKnownPosition) {
+              consecutiveUnchanged++;
+              if (consecutiveUnchanged > 3) {
+                pollIntervalMs = Math.min(5000, pollIntervalMs * 1.3);
+              }
+            } else {
+              consecutiveUnchanged = 0;
+              pollIntervalMs = 800; // Fast rate on updates
             }
-            clearInterval(pollInterval);
-            document.getElementById('book-btn').disabled = false;
-          } else if (data.status === 'FAILED') {
-            stateBadge.innerHTML = `❌ Status: PAYMENT FAILED`;
-            clearInterval(pollInterval);
-            document.getElementById('book-btn').disabled = false;
-          } else if (data.status === 'SOLD_OUT') {
-            stateBadge.innerHTML = `⚠️ Status: SOLD OUT`;
-            clearInterval(pollInterval);
-            document.getElementById('book-btn').disabled = false;
+            lastKnownPosition = data.positionAhead;
+
+            // When in PROCESSING state, poll faster (500ms) for snappy completion UX
+            if (data.status === 'PROCESSING') {
+              pollIntervalMs = 500;
+            }
+
+            document.getElementById('polling-indicator').textContent = `polling in ${(pollIntervalMs / 1000).toFixed(1)}s...`;
+            pollTimer = setTimeout(pollLoop, pollIntervalMs);
+          } else {
+            document.getElementById('polling-indicator').textContent = 'final state';
           }
-        } catch (e) {
-          console.error(e);
+        } catch (err) {
+          console.error(err);
+          pollTimer = setTimeout(pollLoop, 3000);
         }
-      }, 800);
+      }
+
+      pollLoop();
     }
 
+    function updateQueueStatusUI(data) {
+      const statusTitle = document.getElementById('status-title');
+      const qSeqVal = document.getElementById('q-seq-val');
+      const qAheadVal = document.getElementById('q-ahead-val');
+      const ticketView = document.getElementById('confirmed-ticket-view');
+      const bookBtn = document.getElementById('book-btn');
+
+      qSeqVal.textContent = data.queueSequence || '-';
+      qAheadVal.textContent = data.positionAhead !== undefined ? data.positionAhead : '-';
+
+      if (data.status === 'WAITING') {
+        statusTitle.innerHTML = `<span class="pulse-dot"></span><span>In Queue: WAITING (#${data.positionAhead + 1})</span>`;
+        ticketView.style.display = 'none';
+        bookBtn.disabled = true;
+        return true;
+      } else if (data.status === 'PROCESSING') {
+        statusTitle.innerHTML = `<span class="pulse-dot blue"></span><span>Payment Processing in Gateway...</span>`;
+        ticketView.style.display = 'none';
+        bookBtn.disabled = true;
+        return true;
+      } else if (data.status === 'CONFIRMED') {
+        statusTitle.innerHTML = `<span class="pulse-dot green"></span><span style="color: #34d399;">Ticket Confirmed!</span>`;
+        ticketView.style.display = 'flex';
+        if (data.booking) {
+          document.getElementById('ticket-seat-label').textContent = data.booking.seatLabel;
+          document.getElementById('ticket-ref-val').textContent = data.booking.bookingId;
+        }
+        bookBtn.disabled = false;
+        fetchDashboard();
+        return false; // Terminal state, stop polling
+      } else if (data.status === 'FAILED') {
+        statusTitle.innerHTML = `<span class="pulse-dot red"></span><span style="color: #fb7185;">Payment Failed (Seat Released)</span>`;
+        ticketView.style.display = 'none';
+        bookBtn.disabled = false;
+        fetchDashboard();
+        return false;
+      } else if (data.status === 'SOLD_OUT') {
+        statusTitle.innerHTML = `<span class="pulse-dot red"></span><span style="color: #fbbf24;">Event Sold Out</span>`;
+        ticketView.style.display = 'none';
+        bookBtn.disabled = true;
+        fetchDashboard();
+        return false;
+      }
+      return true;
+    }
+
+    // --- Bookings History ---
+    async function loadUserBookings() {
+      const userId = document.getElementById('user-id-input').value.trim();
+      const container = document.getElementById('history-container');
+      container.innerHTML = '<p style="font-size: 0.85rem; color: var(--text-muted); text-align: center; padding: 20px;">Fetching bookings...</p>';
+
+      try {
+        const res = await fetch('/me/bookings', {
+          headers: { 'x-user-id': userId }
+        });
+        const data = await res.json();
+
+        if (!data.bookings || data.bookings.length === 0) {
+          container.innerHTML = '<p style="font-size: 0.85rem; color: var(--text-muted); text-align: center; padding: 20px;">No bookings found for this user.</p>';
+          return;
+        }
+
+        let html = `
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>Seat</th>
+                <th>Event</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        data.bookings.forEach(b => {
+          html += `
+            <tr>
+              <td><code style="color: var(--cyan);">${b.booking_id.substring(0, 18)}...</code></td>
+              <td><strong style="color: #34d399;">${b.seat_label}</strong></td>
+              <td>${b.event_title}</td>
+              <td>${new Date(b.confirmed_at).toLocaleDateString()}</td>
+            </tr>
+          `;
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+      } catch (err) {
+        container.innerHTML = `<p style="color: var(--rose); font-size: 0.85rem;">Failed to load bookings: ${err.message}</p>`;
+      }
+    }
+
+    function switchLeftTab(tab) {
+      const bookBtn = document.getElementById('tab-book');
+      const histBtn = document.getElementById('tab-history');
+      const bookView = document.getElementById('panel-booking-view');
+      const histView = document.getElementById('panel-history-view');
+
+      if (tab === 'book') {
+        bookBtn.classList.add('active');
+        histBtn.classList.remove('active');
+        bookView.style.display = 'flex';
+        histView.style.display = 'none';
+      } else {
+        histBtn.classList.add('active');
+        bookBtn.classList.remove('active');
+        histView.style.display = 'block';
+        bookView.style.display = 'none';
+        loadUserBookings();
+      }
+    }
+
+    // --- Admin & Controls ---
     async function togglePauseDispatch() {
-      const endpoint = isPaused ? '/admin/dispatch/resume' : '/admin/dispatch/pause';
-      await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventId: EVENT_ID }) });
+      const endpoint = isDispatchPaused ? '/admin/dispatch/resume' : '/admin/dispatch/pause';
+      await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId: EVENT_ID })
+      });
       fetchDashboard();
     }
 
-    async function quickBatchQueue(count) {
+    async function simulateTraffic(count) {
       for (let i = 0; i < count; i++) {
         const uid = `sim_user_${Math.floor(Math.random() * 90000 + 10000)}`;
         fetch(`/events/${EVENT_ID}/queue`, {
@@ -423,19 +946,16 @@
       setTimeout(fetchDashboard, 200);
     }
 
-    async function resetDemo() {
-      if (!confirm('Reset seats, gateways, and queue?')) return;
+    async function resetDemoSystem() {
+      if (!confirm('Reset seats, gateways, and queue back to baseline?')) return;
       await fetch('/admin/reset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventId: EVENT_ID, seatCount: 50, gatewayCount: 3 })
       });
       fetchDashboard();
+      checkExistingQueueStatus();
     }
-
-    // Initial setup
-    fetchDashboard();
-    setInterval(fetchDashboard, 1500);
   </script>
 </body>
 </html>
