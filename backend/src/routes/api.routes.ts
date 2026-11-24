@@ -34,6 +34,42 @@ export function registerRoutes(
   };
 
   // --- 1. Event Routes ---
+  app.get('/events', async (req, reply) => {
+    const db = await getDb();
+    const res = await db.query(
+      `SELECT e.*, 
+              (SELECT COUNT(*) FROM seats WHERE event_id = e.event_id AND status = 'AVAILABLE') as available_seats,
+              (SELECT COUNT(*) FROM seats WHERE event_id = e.event_id AND status = 'HELD') as held_seats,
+              (SELECT COUNT(*) FROM seats WHERE event_id = e.event_id AND status = 'SOLD') as sold_seats,
+              (SELECT COUNT(*) FROM queue_entries WHERE event_id = e.event_id AND status = 'WAITING') as waiting_count,
+              (SELECT COUNT(*) FROM payment_gateways WHERE event_id = e.event_id AND status = 'FREE') as free_gateways,
+              (SELECT COUNT(*) FROM payment_gateways WHERE event_id = e.event_id) as total_gateways
+       FROM events e 
+       ORDER BY e.created_at ASC`
+    );
+
+    return {
+      events: res.rows.map((row) => ({
+        eventId: row.event_id,
+        title: row.title,
+        venue: row.venue,
+        eventTime: row.event_time,
+        totalSeats: row.total_seats,
+        priceMinor: row.price_minor,
+        currency: row.currency,
+        saleStatus: row.sale_status,
+        metrics: {
+          availableSeats: parseInt(row.available_seats, 10),
+          heldSeats: parseInt(row.held_seats, 10),
+          soldSeats: parseInt(row.sold_seats, 10),
+          waitingQueue: parseInt(row.waiting_count, 10),
+          freeGateways: parseInt(row.free_gateways, 10),
+          totalGateways: parseInt(row.total_gateways, 10),
+        },
+      })),
+    };
+  });
+
   app.get('/events/:id', async (req, reply) => {
     const { id } = req.params as { id: string };
     const db = await getDb();
