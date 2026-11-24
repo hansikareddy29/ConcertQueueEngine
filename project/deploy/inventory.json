@@ -1,0 +1,31 @@
+{
+  "central_server": {
+    "host": "127.0.0.1",
+    "postgres_host": "127.0.0.1",
+    "postgres_port": 5432,
+    "postgres_db": "concert_booking",
+    "postgres_user": "postgres",
+    "postgres_password": "password123",
+    "nginx_port": 80
+  },
+  "remote_nodes": [
+    {
+      "name": "node-1",
+      "host": "192.168.1.101",
+      "ssh_port": 22,
+      "ssh_user": "ubuntu",
+      "ssh_key_path": "~/.ssh/id_rsa",
+      "remote_dir": "/opt/concert-booking",
+      "backend_ports": [4001, 4002]
+    },
+    {
+      "name": "node-2",
+      "host": "192.168.1.102",
+      "ssh_port": 22,
+      "ssh_user": "ubuntu",
+      "ssh_key_path": "~/.ssh/id_rsa",
+      "remote_dir": "/opt/concert-booking",
+      "backend_ports": [4001, 4002]
+    }
+  ]
+}
