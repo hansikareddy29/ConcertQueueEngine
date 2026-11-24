@@ -1342,6 +1342,10 @@
         const res = await fetch(`/events/${eventId}`);
         currentEvent = await res.json();
 
+        // Clear any previous event's selected seats to ensure independent seat maps
+        selectedSeats = [];
+        updateSeatSelectionBar();
+
         goToView('seatmap');
       } catch (e) {
         alert('Could not load seat map: ' + e.message);
@@ -1468,14 +1472,13 @@
           const seatLabel = `${ring.prefix}-R${ringIdx + 1}-${seatNum}`;
           const seatId = `seat_${eventId}_${seatLabel}`;
 
-          // Determine status
+          // Determine status STRICTLY by this event's database state (no index bleed)
           let status = 'available';
-          if (heldLabels.has(seatLabel) || (backendSeats[seatIdx] && backendSeats[seatIdx].status === 'HELD')) {
+          if (heldLabels.has(seatLabel)) {
             status = 'held';
-          } else if (soldLabels.has(seatLabel) || (backendSeats[seatIdx] && backendSeats[seatIdx].status === 'SOLD')) {
+          } else if (soldLabels.has(seatLabel)) {
             status = 'sold';
           }
-          seatIdx++;
 
           const isSelected = selectedSeats.includes(seatLabel);
           const statusClass = isSelected ? 'selected' : status;
@@ -1776,6 +1779,10 @@ Held seats are reserved for 5 minutes. If their payment is not completed, this s
       document.getElementById('conf-user-id').textContent = currentUser;
       document.getElementById('conf-booking-id').textContent = data.booking?.bookingId || `book_${Date.now()}`;
       document.getElementById('conf-payment-id').textContent = `pay_tx_${Date.now().toString(36)}`;
+
+      // Clear selected seats so next event starts with a clean slate
+      selectedSeats = [];
+      updateSeatSelectionBar();
 
       goToView('confirmation');
     }

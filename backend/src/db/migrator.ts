@@ -1,3 +1,22 @@
+// Circular arena labels definition (156 seats)
+export function getCircularSeatLabels(): string[] {
+  const rings = [
+    { prefix: 'VIP', ring: 1, count: 16 },
+    { prefix: 'VIP', ring: 2, count: 20 },
+    { prefix: 'LB', ring: 3, count: 24 },
+    { prefix: 'LB', ring: 4, count: 28 },
+    { prefix: 'CL', ring: 5, count: 32 },
+    { prefix: 'UG', ring: 6, count: 36 },
+  ];
+  const labels: string[] = [];
+  rings.forEach((r) => {
+    for (let i = 1; i <= r.count; i++) {
+      labels.push(`${r.prefix}-R${r.ring}-${i.toString().padStart(2, '0')}`);
+    }
+  });
+  return labels;
+}
+
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -113,6 +132,19 @@ export async function seedInitialData(
         );
       }
 
+      // 3.5 Ensure 156 Circular Seats with exact labels exist independently for each event
+      const circularLabels = getCircularSeatLabels();
+      for (let s = 1; s <= circularLabels.length; s++) {
+        const lbl = circularLabels[s - 1];
+        const sid = `seat_${evt.id}_${lbl}`;
+        await client.query(
+          `INSERT INTO seats (seat_id, event_id, label, status, version)
+           VALUES ($1, $2, $3, 'AVAILABLE', 0)
+           ON CONFLICT (event_id, label) DO NOTHING`,
+          [sid, evt.id, lbl]
+        );
+      }
+
       // 4. Seed Seats in batches for efficiency
       const existingSeats = await client.query(
         `SELECT COUNT(*) as count FROM seats WHERE event_id = $1`,
@@ -128,10 +160,18 @@ export async function seedInitialData(
           const values: any[] = [];
           const placeholders: string[] = [];
 
+          const circularLabels = getCircularSeatLabels();
           let pIdx = 1;
           for (let s = i; s <= end; s++) {
-            const seatId = `seat_${evt.id}_${s.toString().padStart(5, '0')}`;
-            const label = `SEAT-${s.toString().padStart(5, '0')}`;
+            let label: string;
+            let seatId: string;
+            if (s <= circularLabels.length) {
+              label = circularLabels[s - 1];
+              seatId = `seat_${evt.id}_${label}`;
+            } else {
+              label = `UG-SEC-${s.toString().padStart(5, '0')}`;
+              seatId = `seat_${evt.id}_${s.toString().padStart(5, '0')}`;
+            }
             placeholders.push(`($${pIdx++}, $${pIdx++}, $${pIdx++}, 'AVAILABLE', 0)`);
             values.push(seatId, evt.id, label);
           }
