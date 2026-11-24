@@ -240,11 +240,88 @@
     /* ==================================================== */
     /* VIEW 2: SEAT MAP SELECTION                           */
     /* ==================================================== */
-    #view-seat-map {
+    #view-seatmap, #view-seat-map {
       display: none;
       flex-direction: column;
       gap: 20px;
     }
+    .seatmap-controls-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+    }
+    .seatmap-event-select {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      color: #fff;
+      font-size: 0.92rem;
+      font-weight: 700;
+      outline: none;
+      cursor: pointer;
+    }
+    .seatmap-event-select:focus {
+      border-color: var(--primary);
+    }
+    .qty-picker {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      background: var(--bg-elevated);
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+    }
+    .qty-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-surface);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+    .qty-btn:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      transform: scale(1.08);
+    }
+    .seat-tier-divider {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin: 10px 0 2px 0;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .seat-tier-divider::before,
+    .seat-tier-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-subtle);
+    }
+    .tier-vip { color: #fbbf24; }
+    .tier-premium { color: #818cf8; }
+    .tier-standard { color: #94a3b8; }
     .seat-map-wrapper {
       background: var(--bg-surface);
       border: 1px solid var(--border-subtle);
@@ -593,9 +670,18 @@
     <!-- ======================================================= -->
     <!-- VIEW 2: INTERACTIVE SEAT MAP SELECTION                  -->
     <!-- ======================================================= -->
-    <section id="view-seat-map">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <button class="btn btn-secondary" onclick="goToView('events')">← Back to All Events</button>
+    <section id="view-seatmap">
+      <div class="seatmap-controls-bar">
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+          <button class="btn btn-secondary" onclick="goToView('events')">← Back to All Events</button>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Concert:</span>
+            <select id="sm-event-selector" class="seatmap-event-select" onchange="onSeatMapEventChange(this.value)">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+        </div>
+
         <div style="text-align: right;">
           <h2 id="sm-event-title" style="font-size: 1.25rem; font-weight: 800; color: #fff;">Concert Title</h2>
           <span style="font-size: 0.85rem; color: var(--text-muted);" id="sm-event-venue">Venue Name</span>
@@ -604,13 +690,25 @@
 
       <div class="seat-map-wrapper">
         <!-- Stage Visual -->
-        <div class="stage-curved">STAGE & SCREEN THIS WAY</div>
+        <div class="stage-curved">STAGE & ARTIST PERFORMANCE AREA</div>
+
+        <!-- Quick Seat Quantity Selector -->
+        <div class="qty-picker">
+          <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Quick Pick:</span>
+          <button class="qty-btn" onclick="quickSelectSeats(1)">1</button>
+          <button class="qty-btn" onclick="quickSelectSeats(2)">2</button>
+          <button class="qty-btn" onclick="quickSelectSeats(3)">3</button>
+          <button class="qty-btn" onclick="quickSelectSeats(4)">4</button>
+          <button class="qty-btn" onclick="quickSelectSeats(6)">6</button>
+          <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.78rem;" onclick="clearSelectedSeats()">Clear</button>
+        </div>
 
         <!-- Legend -->
         <div class="seat-legend">
           <div class="legend-item"><div class="legend-box avail"></div> Available</div>
           <div class="legend-item"><div class="legend-box selected"></div> Selected</div>
           <div class="legend-item"><div class="legend-box sold"></div> Sold / Occupied</div>
+          <div class="legend-item"><div class="legend-box" style="background: rgba(245, 158, 11, 0.25); border: 1px solid var(--amber);"></div> In Checkout</div>
         </div>
 
         <!-- Interactive Grid of Seats -->
@@ -623,14 +721,14 @@
       <div class="seat-selection-bar">
         <div>
           <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Selected Seats</div>
-          <div style="font-size: 1.15rem; font-weight: 800; color: #34d399;" id="bar-selected-seats">None (Click seats above)</div>
+          <div style="font-size: 1.15rem; font-weight: 800; color: #34d399;" id="bar-selected-seats">None (Click seats or use Quick Pick above)</div>
         </div>
         <div>
           <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Total Amount</div>
           <div style="font-size: 1.4rem; font-weight: 800; color: #fff;" id="bar-total-price">$0.00</div>
         </div>
         <button class="btn btn-primary" id="btn-proceed-booking" onclick="proceedToQueue()" disabled>
-          Book Selected Seats →
+          Book Selected Seats → Proceed to Queue
         </button>
       </div>
     </section>
@@ -847,6 +945,7 @@
   <script>
     // --- Application State ---
     let currentUser = localStorage.getItem('cqe_user_id') || 'usr_00001';
+    let allEvents = [];
     let currentEvent = null;
     let selectedSeats = [];
     let activeAssignmentId = null;
@@ -855,9 +954,10 @@
     let pollIntervalMs = 800;
 
     // --- On Load ---
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('header-user-tag').textContent = `User: ${currentUser}`;
       document.getElementById('prof-switch-user').value = currentUser;
+      await loadEventsCatalog();
       goToView('events');
     });
 
@@ -865,8 +965,11 @@
     function goToView(viewId) {
       const views = ['events', 'seatmap', 'queue-wait', 'payment', 'confirmation', 'profile'];
       views.forEach(v => {
-        const el = document.getElementById(`view-${v}`);
-        if (el) el.style.display = (v === viewId) ? (v === 'payment' ? 'flex' : (v === 'queue-wait' || v === 'confirmation' ? 'flex' : 'flex')) : 'none';
+        const targetId = (v === 'seatmap') ? 'view-seatmap' : `view-${v}`;
+        const el = document.getElementById(targetId) || document.getElementById(`view-${v}`) || document.getElementById('view-seat-map');
+        if (el) {
+          el.style.display = (v === viewId) ? 'flex' : 'none';
+        }
       });
 
       document.getElementById('btn-nav-events').classList.toggle('active', viewId === 'events');
@@ -875,6 +978,8 @@
 
       if (viewId === 'events') {
         loadEventsCatalog();
+      } else if (viewId === 'seatmap') {
+        initUnifiedSeatMap();
       } else if (viewId === 'profile') {
         loadProfileData();
       }
@@ -886,7 +991,12 @@
       try {
         const res = await fetch('/events');
         const data = await res.json();
-        const events = data.events || [];
+        allEvents = data.events || [];
+
+        // Pre-select default event if none chosen
+        if (!currentEvent && allEvents.length > 0) {
+          currentEvent = allEvents[0];
+        }
 
         container.innerHTML = '';
         const gradients = [
@@ -896,7 +1006,7 @@
           'linear-gradient(135deg, #164e63, #0284c7)'
         ];
 
-        events.forEach((evt, idx) => {
+        allEvents.forEach((evt, idx) => {
           const grad = gradients[idx % gradients.length];
           const priceStr = `$${(evt.priceMinor / 100).toFixed(2)}`;
           const avail = evt.metrics.availableSeats;
@@ -934,18 +1044,65 @@
       }
     }
 
-    // --- 2. Select Event & Build Interactive Seat Map ---
+    // --- 2. Unified Seat Map Logic ---
+    async function initUnifiedSeatMap() {
+      if (allEvents.length === 0) {
+        try {
+          const res = await fetch('/events');
+          const data = await res.json();
+          allEvents = data.events || [];
+        } catch (e) {
+          console.error('Error loading events for seat map:', e);
+        }
+      }
+
+      if (!currentEvent && allEvents.length > 0) {
+        currentEvent = allEvents[0];
+      }
+
+      // Populate dropdown
+      const sel = document.getElementById('sm-event-selector');
+      if (sel && allEvents.length > 0) {
+        sel.innerHTML = allEvents.map(e => 
+          `<option value="${e.eventId}" ${currentEvent && e.eventId === currentEvent.eventId ? 'selected' : ''}>
+            ${e.title} ($${(e.priceMinor / 100).toFixed(2)})
+          </option>`
+        ).join('');
+      }
+
+      if (currentEvent) {
+        document.getElementById('sm-event-title').textContent = currentEvent.title;
+        document.getElementById('sm-event-venue').textContent = `${currentEvent.venue} • $${(currentEvent.priceMinor / 100).toFixed(2)}`;
+        await buildSeatMapGrid(currentEvent.eventId);
+      }
+    }
+
+    async function onSeatMapEventChange(eventId) {
+      const match = allEvents.find(e => e.eventId === eventId);
+      if (match) {
+        currentEvent = match;
+      } else {
+        try {
+          const res = await fetch(`/events/${eventId}`);
+          currentEvent = await res.json();
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      if (currentEvent) {
+        document.getElementById('sm-event-title').textContent = currentEvent.title;
+        document.getElementById('sm-event-venue').textContent = `${currentEvent.venue} • $${(currentEvent.priceMinor / 100).toFixed(2)}`;
+        selectedSeats = [];
+        updateSeatSelectionBar();
+        await buildSeatMapGrid(currentEvent.eventId);
+      }
+    }
+
     async function selectEventForSeatMap(eventId) {
       try {
         const res = await fetch(`/events/${eventId}`);
         currentEvent = await res.json();
-
-        document.getElementById('sm-event-title').textContent = currentEvent.title;
-        document.getElementById('sm-event-venue').textContent = `${currentEvent.venue} • $${(currentEvent.priceMinor / 100).toFixed(2)}`;
-
-        selectedSeats = [];
-        updateSeatSelectionBar();
-        await buildSeatMapGrid(eventId);
 
         goToView('seatmap');
       } catch (e) {
@@ -955,7 +1112,7 @@
 
     async function buildSeatMapGrid(eventId) {
       const target = document.getElementById('seats-grid-target');
-      target.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">Loading live seat inventory...</p>';
+      target.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">Loading live stadium seats...</p>';
 
       try {
         const res = await fetch(`/events/${eventId}/seats`);
@@ -967,41 +1124,70 @@
         const colsPerRow = 10;
 
         let seatIndex = 0;
-        rows.forEach(r => {
+        rows.forEach((r, rIdx) => {
+          // Tier headers
+          if (rIdx === 0) {
+            const div = document.createElement('div');
+            div.className = 'seat-tier-divider tier-vip';
+            div.textContent = '★ VIP Front Stage (Rows A-B) ★';
+            target.appendChild(div);
+          } else if (rIdx === 2) {
+            const div = document.createElement('div');
+            div.className = 'seat-tier-divider tier-premium';
+            div.textContent = '◆ Premium Tier (Rows C-E) ◆';
+            target.appendChild(div);
+          } else if (rIdx === 5) {
+            const div = document.createElement('div');
+            div.className = 'seat-tier-divider tier-standard';
+            div.textContent = '● Standard General (Rows F-H) ●';
+            target.appendChild(div);
+          }
+
           const rowEl = document.createElement('div');
           rowEl.className = 'seat-row';
 
-          const labelEl = document.createElement('div');
-          labelEl.className = 'row-label';
-          labelEl.textContent = r;
-          rowEl.appendChild(labelEl);
+          // Left row label
+          const leftLabel = document.createElement('div');
+          leftLabel.className = 'row-label';
+          leftLabel.textContent = r;
+          rowEl.appendChild(leftLabel);
 
           for (let c = 1; c <= colsPerRow; c++) {
-            const seat = seats[seatIndex] || {
-              seat_id: `seat_${eventId}_${r}${c}`,
-              label: `${r}${c.toString().padStart(2, '0')}`,
+            const seatLabel = `${r}${c.toString().padStart(2, '0')}`;
+            const seatData = seats[seatIndex] || {
+              seat_id: `seat_${eventId}_${seatLabel}`,
+              label: seatLabel,
               status: 'AVAILABLE'
             };
             seatIndex++;
 
             const seatEl = document.createElement('div');
-            seatEl.className = `seat-node ${seat.status.toLowerCase()}`;
+            const isSelected = selectedSeats.includes(seatLabel);
+            seatEl.className = `seat-node ${seatData.status.toLowerCase()} ${isSelected ? 'selected' : ''}`;
             seatEl.textContent = c;
-            seatEl.dataset.seatId = seat.seat_id;
-            seatEl.dataset.seatLabel = seat.label;
-            seatEl.dataset.status = seat.status;
+            seatEl.title = `Seat ${seatLabel} • ${seatData.status}`;
+            seatEl.dataset.seatId = seatData.seat_id;
+            seatEl.dataset.seatLabel = seatLabel;
+            seatEl.dataset.status = seatData.status;
 
-            if (seat.status === 'AVAILABLE') {
-              seatEl.onclick = () => toggleSeatSelection(seatEl, seat.label);
+            if (seatData.status === 'AVAILABLE') {
+              seatEl.onclick = () => toggleSeatSelection(seatEl, seatLabel);
             }
 
             rowEl.appendChild(seatEl);
           }
 
+          // Right row label
+          const rightLabel = document.createElement('div');
+          rightLabel.className = 'row-label';
+          rightLabel.textContent = r;
+          rowEl.appendChild(rightLabel);
+
           target.appendChild(rowEl);
         });
       } catch (err) {
-        console.error(err);
+        console.error('Error building seats grid:', err);
+        target.innerHTML = '<p style="color: var(--rose); padding: 20px;">Error rendering seat map.</p>';
       }
     }
 
@@ -1020,21 +1206,44 @@
       updateSeatSelectionBar();
     }
 
+    function quickSelectSeats(count) {
+      clearSelectedSeats();
+      const allSeatNodes = Array.from(document.querySelectorAll('.seat-node.available'));
+      const toSelect = allSeatNodes.slice(0, count);
+
+      toSelect.forEach(el => {
+        const lbl = el.dataset.seatLabel;
+        if (lbl) {
+          selectedSeats.push(lbl);
+          el.classList.add('selected');
+        }
+      });
+      updateSeatSelectionBar();
+    }
+
+    function clearSelectedSeats() {
+      selectedSeats = [];
+      document.querySelectorAll('.seat-node.selected').forEach(el => el.classList.remove('selected'));
+      updateSeatSelectionBar();
+    }
+
     function updateSeatSelectionBar() {
       const barSeats = document.getElementById('bar-selected-seats');
       const barPrice = document.getElementById('bar-total-price');
       const proceedBtn = document.getElementById('btn-proceed-booking');
 
       if (selectedSeats.length === 0) {
-        barSeats.textContent = 'None (Click seats above)';
+        barSeats.textContent = 'None (Click seats or use Quick Pick above)';
         barPrice.textContent = '$0.00';
         proceedBtn.disabled = true;
+        proceedBtn.textContent = 'Book Selected Seats → Proceed to Queue';
       } else {
-        barSeats.textContent = selectedSeats.join(', ');
-        const total = (selectedSeats.length * (currentEvent.priceMinor / 100)).toFixed(2);
+        barSeats.textContent = `${selectedSeats.join(', ')} (${selectedSeats.length} Seat${selectedSeats.length > 1 ? 's' : ''})`;
+        const unitPrice = currentEvent ? (currentEvent.priceMinor / 100) : 150.0;
+        const total = (selectedSeats.length * unitPrice).toFixed(2);
         barPrice.textContent = `$${total}`;
         proceedBtn.disabled = false;
-        proceedBtn.textContent = `Book ${selectedSeats.length} Seat${selectedSeats.length > 1 ? 's' : ''} →`;
+        proceedBtn.textContent = `Book ${selectedSeats.length} Seat${selectedSeats.length > 1 ? 's' : ''} ($${total}) → Proceed to Queue`;
       }
     }
 
