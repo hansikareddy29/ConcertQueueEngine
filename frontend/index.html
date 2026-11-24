@@ -784,7 +784,7 @@
         <div class="brand-icon">🎫</div>
         <div>
           <div class="brand-title">ConcertQueueEngine</div>
-          <div class="brand-subtitle" style="font-size: 0.8rem; color: var(--text-muted);">BookMyShow-Style Virtual Queue & Concurrency Engine</div>
+          <div class="brand-subtitle" style="font-size: 0.8rem; color: var(--text-muted);">Official Live Concerts & Arena Experience</div>
         </div>
       </div>
 
@@ -808,7 +808,7 @@
           <h1 style="font-size: 1.8rem; font-weight: 800; color: #fff;">Featured Concerts & Live Tours</h1>
           <p style="color: var(--text-secondary); margin-top: 4px;">Select your favorite event to pick seats on the interactive stadium map.</p>
         </div>
-        <span class="badge badge-emerald" style="padding: 8px 16px;">⚡ Virtual Queue Engine Online</span>
+
       </div>
 
       <div class="events-grid" id="events-grid-container">
@@ -914,7 +914,7 @@
       <div>
         <h2 style="font-size: 1.8rem; font-weight: 800; color: #fff;">High Concurrency Virtual Queue</h2>
         <p style="color: var(--text-secondary); max-width: 500px; margin-top: 6px;">
-          You are safely queued in FIFO order. We are routing you to an active payment gateway as soon as capacity frees.
+          You are safely queued in line. We will direct you to checkout as soon as your turn arrives.
         </p>
       </div>
 
@@ -939,7 +939,7 @@
     <section id="view-payment">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <h2 style="font-size: 1.5rem; font-weight: 800; color: #fff;">💳 Complete Payment</h2>
-        <span class="badge badge-emerald" id="assigned-gateway-pill">Gateway 1 Assigned</span>
+        <span class="badge badge-emerald" id="assigned-gateway-pill">🔒 Checkout Session Ready</span>
       </div>
 
       <!-- 5-Minute Seat Hold Countdown Banner -->
@@ -1262,7 +1262,6 @@
               <div class="event-meta">
                 <div>📍 ${evt.venue}</div>
                 <div>📅 ${new Date(evt.eventTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-                <div>⚡ ${evt.metrics.totalGateways} Fixed Payment Gateways</div>
               </div>
               <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">
                 Capacity: <strong style="color: #fff;">${total.toLocaleString()}</strong> Seats | Avail: <strong style="color: #34d399;">${avail.toLocaleString()}</strong>
@@ -1652,7 +1651,7 @@ Held seats are reserved for 5 minutes. If their payment is not completed, this s
     function openPaymentPage(data) {
       if (pollTimer) clearTimeout(pollTimer);
 
-      document.getElementById('assigned-gateway-pill').textContent = `Gateway ${data.assignment?.gatewayId || 1} Assigned`;
+      document.getElementById('assigned-gateway-pill').textContent = '🔒 Checkout Session Ready';
       document.getElementById('pay-summary-title').textContent = currentEvent.title;
       document.getElementById('pay-summary-venue').textContent = currentEvent.venue;
       
@@ -1735,7 +1734,7 @@ Held seats are reserved for 5 minutes. If their payment is not completed, this s
     async function submitPayment() {
       const btn = document.getElementById('btn-pay-now');
       btn.disabled = true;
-      btn.textContent = 'Processing with Gateway...';
+      btn.textContent = 'Securing Booking...';
 
       if (holdTimer) clearInterval(holdTimer);
       holdTimer = null;
