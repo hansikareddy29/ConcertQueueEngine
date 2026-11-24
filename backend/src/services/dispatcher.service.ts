@@ -1,3 +1,4 @@
+import { wsManager } from './ws.manager.js';
 import crypto from 'crypto';
 import { getDb, IDatabase } from '../db/connection.js';
 import { CONFIG } from '../config.js';
@@ -285,6 +286,21 @@ export class DispatcherService {
         queueSequence: Number(queueEntry.queue_sequence),
       };
     });
+
+    // Notify user immediately over WebSocket with zero latency
+    if (outcome.assigned) {
+      wsManager.sendToUser(eventId, outcome.userId!, {
+        type: 'GATEWAY_ASSIGNED',
+        assignmentId: outcome.assignmentId,
+        gatewayId: outcome.gatewayId,
+        seatLabel: outcome.seatLabel,
+        queueSequence: outcome.queueSequence,
+      });
+      wsManager.broadcastToEvent(eventId, {
+        type: 'QUEUE_ADVANCED',
+        processedSequence: outcome.queueSequence,
+      });
+    }
 
     // 6. Non-blocking external simulator launch AFTER commit
     if (outcome.assigned && paymentToStart) {

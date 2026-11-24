@@ -1,3 +1,4 @@
+import { wsManager } from '../services/ws.manager.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -527,6 +528,57 @@ export function registerRoutes(
     await seedInitialData(db, { seatCount, gatewayCount, userCount: 200 });
 
     return { success: true, message: `System reset for ${eventId} with ${seatCount} seats and ${gatewayCount} gateways.` };
+  });
+
+
+  // --- WebSocket Real-Time Queue & Pre-Queue Route ---
+  app.get('/ws/events/:id/queue', { websocket: true }, (connection: any, req: any) => {
+    const { id: eventId } = req.params as { id: string };
+    const query = (req.query as any) || {};
+    const userId = (req.headers['x-user-id'] as string) || query.userId || 'usr_00001';
+
+    const socket = connection.socket || connection;
+    wsManager.register(eventId, userId, socket);
+
+    // Push initial status immediately over WebSocket
+    queueService.getQueueStatus(eventId, userId).then((status) => {
+      if (socket.readyState === 1) {
+        socket.send(JSON.stringify({ type: 'QUEUE_STATUS', data: status }));
+      }
+    }).catch(console.error);
+
+    socket.on('message', async (raw: any) => {
+      try {
+        const msg = JSON.parse(raw.toString());
+        if (msg.type === 'PING') {
+          socket.send(JSON.stringify({ type: 'PONG' }));
+        } else if (msg.type === 'GET_STATUS') {
+          const status = await queueService.getQueueStatus(eventId, userId);
+          socket.send(JSON.stringify({ type: 'QUEUE_STATUS', data: status }));
+        }
+      } catch (e) {}
+    });
+  });
+
+  // Trigger Drop Shuffle for Pre-Queue Waiting Room
+  app.post('/events/:id/drop', async (req, reply) => {
+    const { id: eventId } = req.params as { id: string };
+    try {
+      const res = await queueService.executeDropShuffle(eventId);
+      wsManager.broadcastToEvent(eventId, {
+        type: 'DROP_SHUFFLE_COMPLETE',
+        eventId,
+        shuffledCount: res.shuffledCount,
+      });
+      dispatcherService.triggerDispatch(eventId);
+      return reply.code(200).send({
+        success: true,
+        message: `Ticket drop initiated! Shuffled ${res.shuffledCount} waiting room users.`,
+        ...res,
+      });
+    } catch (err: any) {
+      return reply.code(500).send({ error: 'DROP_FAILED', message: err.message });
+    }
   });
 
   // Healthcheck endpoint

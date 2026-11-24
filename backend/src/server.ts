@@ -1,3 +1,4 @@
+import fastifyWebsocket from '@fastify/websocket';
 import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import { CONFIG } from './config.js';
@@ -28,6 +29,8 @@ export async function createServer(): Promise<AppContext> {
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key', 'x-signature', 'x-user-id'],
   });
+
+  await server.register(fastifyWebsocket);
 
   // Initialize DB and Migrations
   const db = await getDb();

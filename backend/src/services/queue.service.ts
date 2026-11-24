@@ -103,6 +103,51 @@ export class QueueService {
         return result;
       }
 
+      // Check if event is in pre-sale UPCOMING status (Pre-Queue Waiting Room)
+      const evtRow = await client.query(
+        `SELECT sale_status FROM events WHERE event_id = $1`,
+        [eventId]
+      );
+      const isUpcoming = evtRow.rows.length > 0 && evtRow.rows[0].sale_status === 'UPCOMING';
+
+      if (isUpcoming) {
+        const lobbyCheck = await client.query(
+          `SELECT entry_id, joined_at FROM queue_entries WHERE event_id = $1 AND user_id = $2 AND status = 'LOBBY' LIMIT 1`,
+          [eventId, userId]
+        );
+        let entryId: string;
+        let joinedAt: Date;
+        if (lobbyCheck.rows.length > 0) {
+          entryId = lobbyCheck.rows[0].entry_id;
+          joinedAt = new Date(lobbyCheck.rows[0].joined_at);
+        } else {
+          entryId = `qentry_${crypto.randomUUID()}`;
+          joinedAt = new Date();
+          const minSeqRes = await client.query(
+            `SELECT COALESCE(MIN(queue_sequence), 0) as min_seq FROM queue_entries WHERE event_id = $1`,
+            [eventId]
+          );
+          const lobbySeq = Math.min(0, Number(minSeqRes.rows[0].min_seq)) - 1;
+          await client.query(
+            `INSERT INTO queue_entries (entry_id, event_id, user_id, attempt_number, queue_sequence, status, selected_seats, joined_at)
+             VALUES ($1, $2, $3, 1, $4, 'LOBBY', $5, $6)`,
+            [entryId, eventId, userId, lobbySeq, seatsStr, joinedAt]
+          );
+        }
+        const lobbyCountRes = await client.query(
+          `SELECT COUNT(*) as count FROM queue_entries WHERE event_id = $1 AND status = 'LOBBY'`,
+          [eventId]
+        );
+        return {
+          entryId,
+          queueSequence: 0,
+          status: 'LOBBY',
+          positionAhead: parseInt(lobbyCountRes.rows[0].count, 10),
+          joinedAt,
+          isExisting: lobbyCheck.rows.length > 0,
+        };
+      }
+
       // 3. Acquire short lock on event_control to allocate next monotonic queue sequence
       const ctrlRes = await client.query(
         `SELECT next_queue_sequence, dispatch_paused 
@@ -188,7 +233,7 @@ export class QueueService {
        LEFT JOIN seats s ON r.seat_id = s.seat_id
        LEFT JOIN bookings b ON r.reservation_id = b.reservation_id
        WHERE q.event_id = $1 AND q.user_id = $2
-       ORDER BY q.queue_sequence DESC
+       ORDER BY q.joined_at DESC
        LIMIT 1`,
       [eventId, userId]
     );
@@ -236,4 +281,68 @@ export class QueueService {
         : null,
     };
   }
+
+  /**
+   * Executes Drop Shuffle for pre-queue waiting room:
+   * Randomizes all LOBBY users via Fisher-Yates and assigns monotonic queue sequences.
+   */
+  async executeDropShuffle(eventId: string): Promise<any> {
+    const db = await this.getDatabase();
+    return await db.withTransaction(async (client) => {
+      // 1. Mark event ACTIVE and lock sequence counter
+      await client.query(
+        `UPDATE events SET sale_status = 'ACTIVE' WHERE event_id = $1`,
+        [eventId]
+      );
+
+      const ctrlRes = await client.query(
+        `SELECT next_queue_sequence FROM event_control WHERE event_id = $1 FOR UPDATE`,
+        [eventId]
+      );
+      if (ctrlRes.rows.length === 0) {
+        throw new Error(`Event control row not found for ${eventId}`);
+      }
+      let currentSeq = Number(ctrlRes.rows[0].next_queue_sequence);
+
+      // 2. Fetch all lobby entries
+      const lobbyRes = await client.query(
+        `SELECT entry_id, user_id FROM queue_entries WHERE event_id = $1 AND status = 'LOBBY' FOR UPDATE`,
+        [eventId]
+      );
+      const lobbyEntries = lobbyRes.rows;
+
+      // 3. Cryptographic / Fisher-Yates Random Shuffle
+      for (let i = lobbyEntries.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [lobbyEntries[i], lobbyEntries[j]] = [lobbyEntries[j], lobbyEntries[i]];
+      }
+
+      // 4. Assign sequential queue positions to randomized participants
+      for (const entry of lobbyEntries) {
+        await client.query(
+          `UPDATE queue_entries 
+           SET status = 'WAITING', queue_sequence = $1, assigned_at = NOW() 
+           WHERE entry_id = $2`,
+          [currentSeq, entry.entry_id]
+        );
+        currentSeq++;
+      }
+
+      await client.query(
+        `UPDATE event_control SET next_queue_sequence = $1, updated_at = NOW() WHERE event_id = $2`,
+        [currentSeq, eventId]
+      );
+
+      await client.query(
+        `UPDATE events SET sale_status = 'ACTIVE' WHERE event_id = $1`,
+        [eventId]
+      );
+
+      return {
+        shuffledCount: lobbyEntries.length,
+        nextSequence: currentSeq,
+      };
+    });
+  }
+
 }

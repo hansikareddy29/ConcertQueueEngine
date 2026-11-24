@@ -596,8 +596,9 @@
     }
 
     /* ==================================================== */
-    /* VIEW 3: QUEUE WAITING LOADING SCREEN                 */
+    /* VIEW 3: QUEUE WAITING & PRE-QUEUE SCREENS            */
     /* ==================================================== */
+    #view-waiting-room,
     #view-queue-wait {
       display: none;
       flex-direction: column;
@@ -907,6 +908,53 @@
     </section>
 
     <!-- ======================================================= -->
+    <!-- VIEW 2.5: PRE-QUEUE WAITING ROOM (Pre-Sale Drop Lobby)  -->
+    <!-- ======================================================= -->
+    <section id="view-waiting-room">
+      <div class="radar-circle" style="border-color: rgba(245, 158, 11, 0.4); box-shadow: 0 0 24px var(--amber-glow);">⏳</div>
+      <div>
+        <div style="display: flex; gap: 8px; justify-content: center; align-items: center; margin-bottom: 8px;">
+          <span class="badge" style="background: rgba(245, 158, 11, 0.2); border: 1px solid var(--amber); color: #fbbf24;">
+            ⏳ Pre-Sale Waiting Lobby Active
+          </span>
+          <span class="badge badge-emerald">
+            ⚡ WebSocket Live Synced
+          </span>
+        </div>
+        <h2 id="wr-event-title" style="font-size: 1.8rem; font-weight: 800; color: #fff;">Pre-Queue Waiting Room</h2>
+        <p style="color: var(--text-secondary); max-width: 580px; margin: 8px auto 0 auto; text-align: center;">
+          You arrived before tickets opened! You are safely inside the pre-sale waiting lobby.
+        </p>
+      </div>
+
+      <!-- Live Drop Countdown Clock -->
+      <div class="queue-counter-card" style="border-color: rgba(245, 158, 11, 0.4); max-width: 540px; width: 100%;">
+        <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Ticket Window Opens In</div>
+        <div style="font-size: 3.8rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: var(--amber);" id="wr-countdown-clock">00:45</div>
+        <div style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 6px;">
+          Fans in Lobby: <strong id="wr-fan-count" style="color: #34d399;">1 fan</strong> | Status: <strong style="color: #fbbf24;">LOBBY (Pre-Queue)</strong>
+        </div>
+
+        <div style="margin-top: 16px; padding: 14px; background: var(--bg-surface); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); text-align: left; font-size: 0.85rem; line-height: 1.6; color: var(--text-secondary);">
+          <div style="color: #fff; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <span>🎲</span> Fair Fisher-Yates Drop Shuffle Protection
+          </div>
+          To prevent bots and scripts with 1-millisecond network advantages from grabbing all tickets, all users in this waiting room are assigned randomized fair queue numbers when the ticket window drops (T = 00:00). Users who arrive after the drop will join the queue tail in strict FIFO order.
+        </div>
+
+        <!-- Simulation / Admin Trigger -->
+        <div style="margin-top: 18px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+          <button class="btn btn-primary" id="btn-trigger-drop" style="background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #f59e0b;" onclick="triggerTicketDropNow()">
+            ⚡ Open Ticket Window Now (Simulate Drop Shuffle)
+          </button>
+          <button class="btn btn-secondary" onclick="goToView('events')">
+            ← Back to Events
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================= -->
     <!-- VIEW 3: QUEUE WAITING SCREEN (High Demand Loading)      -->
     <!-- ======================================================= -->
     <section id="view-queue-wait">
@@ -1201,7 +1249,7 @@
 
     // --- View Navigation ---
     function goToView(viewId) {
-      const views = ['events', 'seatmap', 'queue-wait', 'payment', 'confirmation', 'profile'];
+      const views = ['events', 'seatmap', 'waiting-room', 'queue-wait', 'payment', 'confirmation', 'profile'];
       views.forEach(v => {
         const targetId = (v === 'seatmap') ? 'view-seatmap' : `view-${v}`;
         const el = document.getElementById(targetId) || document.getElementById(`view-${v}`) || document.getElementById('view-seat-map');
@@ -1249,6 +1297,7 @@
           const avail = evt.metrics.availableSeats;
           const total = evt.totalSeats;
           const held = evt.metrics.heldSeats || 0;
+          const isUpcoming = evt.saleStatus === 'UPCOMING';
 
           const card = document.createElement('div');
           card.className = 'event-card';
@@ -1269,10 +1318,16 @@
               </div>
             </div>
             <div class="event-footer">
-              <span class="badge ${avail > 0 ? 'badge-emerald' : 'badge-rose'}">${avail > 0 ? 'Seats Available' : 'Sold Out'}</span>
-              <button class="btn btn-primary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="selectEventForSeatMap('${evt.eventId}')">
-                Select Seats →
-              </button>
+              ${isUpcoming 
+                ? `<span class="badge" style="background: rgba(245, 158, 11, 0.2); border: 1px solid var(--amber); color: #fbbf24;">⏳ Pre-Queue Open</span>
+                   <button class="btn btn-primary" style="padding: 8px 16px; font-size: 0.85rem; background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #f59e0b;" onclick="joinWaitingRoom('${evt.eventId}')">
+                     ⏳ Join Waiting Room →
+                   </button>`
+                : `<span class="badge ${avail > 0 ? 'badge-emerald' : 'badge-rose'}">${avail > 0 ? 'Seats Available' : 'Sold Out'}</span>
+                   <button class="btn btn-primary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="selectEventForSeatMap('${evt.eventId}')" ${avail === 0 && held === 0 ? 'disabled' : ''}>
+                     Select Seats →
+                   </button>`
+              }
             </div>
           `;
           container.appendChild(card);
@@ -1576,6 +1631,133 @@ Held seats are reserved for 5 minutes. If their payment is not completed, this s
       }
     }
 
+    // --- WebSocket Manager for Real-Time Zero Latency Updates ---
+    let queueWs = null;
+
+    function connectQueueWebSocket(eventId, onMessageCallback) {
+      if (queueWs) {
+        try { queueWs.close(); } catch (e) {}
+        queueWs = null;
+      }
+
+      const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${proto}//${location.host}/ws/events/${eventId}/queue?userId=${currentUser}`;
+
+      try {
+        queueWs = new WebSocket(wsUrl);
+
+        queueWs.onopen = () => {
+          console.log('[WS] Connected to Queue Engine for', eventId);
+          const tag = document.getElementById('queue-polling-tag');
+          if (tag) tag.textContent = '⚡ Connected via WebSocket (0ms Push Updates)';
+        };
+
+        queueWs.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+            if (onMessageCallback) onMessageCallback(msg);
+          } catch (err) {
+            console.error('[WS] Message parse error:', err);
+          }
+        };
+
+        queueWs.onerror = () => {
+          console.warn('[WS] WebSocket unavailable, falling back to adaptive polling');
+        };
+
+        queueWs.onclose = () => {
+          console.log('[WS] Connection closed');
+        };
+      } catch (e) {
+        console.warn('[WS] Failed to initialize WebSocket:', e);
+      }
+    }
+
+    // --- Pre-Queue Waiting Room & Fair Drop Shuffle ---
+    let wrCountdownTimer = null;
+    let wrCountdownSec = 45;
+
+    async function joinWaitingRoom(eventId) {
+      const match = allEvents.find(e => e.eventId === eventId);
+      if (match) currentEvent = match;
+
+      document.getElementById('wr-event-title').textContent = currentEvent ? `${currentEvent.title} — Pre-Sale Lobby` : 'Pre-Queue Waiting Room';
+      goToView('waiting-room');
+
+      // Register into pre-queue lobby
+      try {
+        const res = await fetch(`/events/${eventId}/queue`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': currentUser,
+            'Idempotency-Key': `lobby_${currentUser}_${Date.now()}`
+          },
+          body: JSON.stringify({ selectedSeats: [] })
+        });
+        const data = await res.json();
+        console.log('[Lobby] Successfully registered in lobby:', data);
+      } catch (err) {
+        console.warn('Lobby join error:', err);
+      }
+
+      // Connect WebSocket for real-time lobby updates
+      connectQueueWebSocket(eventId, (msg) => {
+        if (msg.type === 'QUEUE_STATUS' && msg.data?.status === 'WAITING') {
+          if (wrCountdownTimer) clearInterval(wrCountdownTimer);
+          goToView('queue-wait');
+          startAdaptiveQueuePolling();
+        } else if (msg.type === 'DROP_SHUFFLE_COMPLETE') {
+          if (wrCountdownTimer) clearInterval(wrCountdownTimer);
+          goToView('queue-wait');
+          startAdaptiveQueuePolling();
+        }
+      });
+
+      // Start countdown clock
+      if (wrCountdownTimer) clearInterval(wrCountdownTimer);
+      wrCountdownSec = 45;
+      updateWrCountdownDisplay();
+      wrCountdownTimer = setInterval(() => {
+        wrCountdownSec--;
+        updateWrCountdownDisplay();
+        if (wrCountdownSec <= 0) {
+          clearInterval(wrCountdownTimer);
+          triggerTicketDropNow();
+        }
+      }, 1000);
+    }
+
+    function updateWrCountdownDisplay() {
+      const mins = Math.floor(wrCountdownSec / 60).toString().padStart(2, '0');
+      const secs = (wrCountdownSec % 60).toString().padStart(2, '0');
+      const el = document.getElementById('wr-countdown-clock');
+      if (el) el.textContent = `${mins}:${secs}`;
+    }
+
+    async function triggerTicketDropNow() {
+      const btn = document.getElementById('btn-trigger-drop');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '🎲 Executing Fisher-Yates Fair Shuffle...';
+      }
+
+      try {
+        const res = await fetch(`/events/${currentEvent.eventId}/drop`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        console.log('[Drop] Executed:', data);
+      } catch (err) {
+        console.error('Drop shuffle error:', err);
+      }
+
+      if (wrCountdownTimer) clearInterval(wrCountdownTimer);
+      goToView('queue-wait');
+      startAdaptiveQueuePolling();
+    }
+
     // --- 3. Join Virtual Queue with 5-Minute Seat Hold ---
     async function proceedToQueue() {
       if (selectedSeats.length === 0) return alert('Please select at least 1 seat.');
@@ -1604,9 +1786,44 @@ Held seats are reserved for 5 minutes. If their payment is not completed, this s
       }
     }
 
+    function handleQueueStatus(data) {
+      if (!data) return;
+
+      if (data.status === 'WAITING') {
+        const pos = (data.positionAhead || 0) + 1;
+        document.getElementById('queue-position-display').textContent = `#${pos}`;
+        document.getElementById('queue-ahead-count').textContent = data.positionAhead || 0;
+        document.getElementById('queue-seq-num').textContent = data.queueSequence || '-';
+        document.getElementById('queue-progress-bar').style.width = `${Math.max(15, 100 - (data.positionAhead * 15))}%`;
+      } else if (data.status === 'PROCESSING') {
+        activeAssignmentId = data.assignment?.assignmentId;
+        openPaymentPage(data);
+      } else if (data.status === 'CONFIRMED') {
+        openConfirmationPass(data);
+      } else if (data.status === 'FAILED') {
+        alert('Your booking attempt or seat hold timed out. Held seats have been released back to the arena.');
+        goToView('events');
+      } else if (data.status === 'SOLD_OUT') {
+        alert('Sorry, this event is definitively sold out.');
+        goToView('events');
+      }
+    }
+
     function startAdaptiveQueuePolling() {
       if (pollTimer) clearTimeout(pollTimer);
       pollIntervalMs = 800;
+
+      // Connect real-time WebSocket
+      connectQueueWebSocket(currentEvent.eventId, (msg) => {
+        if (msg.type === 'QUEUE_STATUS' || msg.type === 'QUEUE_POSITION_UPDATE') {
+          handleQueueStatus(msg.data);
+          const tag = document.getElementById('queue-polling-tag');
+          if (tag) tag.textContent = '⚡ Real-Time WebSocket Push (0ms latency)';
+        } else if (msg.type === 'GATEWAY_ASSIGNED') {
+          activeAssignmentId = msg.data?.assignmentId || msg.data?.assignment?.assignmentId;
+          openPaymentPage(msg.data);
+        }
+      });
 
       async function poll() {
         try {
@@ -1614,29 +1831,11 @@ Held seats are reserved for 5 minutes. If their payment is not completed, this s
             headers: { 'x-user-id': currentUser }
           });
           const data = await res.json();
+          handleQueueStatus(data);
 
           if (data.status === 'WAITING') {
-            const pos = (data.positionAhead || 0) + 1;
-            document.getElementById('queue-position-display').textContent = `#${pos}`;
-            document.getElementById('queue-ahead-count').textContent = data.positionAhead || 0;
-            document.getElementById('queue-seq-num').textContent = data.queueSequence || '-';
-            document.getElementById('queue-progress-bar').style.width = `${Math.max(15, 100 - (data.positionAhead * 15))}%`;
-            document.getElementById('queue-polling-tag').textContent = `moving through queue... (polling in ${(pollIntervalMs / 1000).toFixed(1)}s)`;
-
             pollIntervalMs = Math.min(3000, pollIntervalMs * 1.15);
             pollTimer = setTimeout(poll, pollIntervalMs);
-          } else if (data.status === 'PROCESSING') {
-            // Reached front! Gateway assigned & Seats Held! Transition to Payment!
-            activeAssignmentId = data.assignment?.assignmentId;
-            openPaymentPage(data);
-          } else if (data.status === 'CONFIRMED') {
-            openConfirmationPass(data);
-          } else if (data.status === 'FAILED') {
-            alert('Your booking attempt or seat hold timed out. Held seats have been released back to the arena.');
-            goToView('events');
-          } else if (data.status === 'SOLD_OUT') {
-            alert('Sorry, this event is definitively sold out.');
-            goToView('events');
           }
         } catch (e) {
           console.error(e);

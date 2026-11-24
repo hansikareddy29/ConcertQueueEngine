@@ -87,6 +87,7 @@ export async function seedInitialData(
       priceMinor: 22000,
       gateways: 5,
       daysOffset: 60,
+      saleStatus: 'UPCOMING',
     },
     {
       id: 'evt_electronic_2026',
@@ -96,6 +97,7 @@ export async function seedInitialData(
       priceMinor: 8500,
       gateways: 3,
       daysOffset: 15,
+      saleStatus: 'ACTIVE',
     },
   ];
 
@@ -103,15 +105,16 @@ export async function seedInitialData(
 
   await database.withTransaction(async (client) => {
     for (const evt of eventsToSeed) {
+      const status = (evt as any).saleStatus || 'ACTIVE';
       // 1. Seed or update event
       await client.query(
         `INSERT INTO events (event_id, title, venue, event_time, total_seats, price_minor, currency, sale_status)
-         VALUES ($1, $2, $3, NOW() + ($4 || ' days')::INTERVAL, $5, $6, 'USD', 'ACTIVE')
+         VALUES ($1, $2, $3, NOW() + ($4 || ' days')::INTERVAL, $5, $6, 'USD', $7)
          ON CONFLICT (event_id) DO UPDATE SET
            total_seats = EXCLUDED.total_seats,
            price_minor = EXCLUDED.price_minor,
-           sale_status = 'ACTIVE'`,
-        [evt.id, evt.title, evt.venue, evt.daysOffset, evt.totalSeats, evt.priceMinor]
+           sale_status = EXCLUDED.sale_status`,
+        [evt.id, evt.title, evt.venue, evt.daysOffset, evt.totalSeats, evt.priceMinor, status]
       );
 
       // 2. Seed event_control
