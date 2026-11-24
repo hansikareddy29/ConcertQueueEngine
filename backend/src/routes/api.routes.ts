@@ -334,21 +334,21 @@ export function registerRoutes(
   });
 
   // UI Web Dashboard & Ticket Booking interface
-  app.get('/', async (req, reply) => {
-    const htmlPath = path.resolve(__dirname, '../../../../frontend/index.html');
-    if (fs.existsSync(htmlPath)) {
-      reply.type('text/html').send(fs.readFileSync(htmlPath, 'utf8'));
+  const serveFrontend = (reply: any) => {
+    const candidates = [
+      path.resolve(process.cwd(), 'frontend/index.html'),
+      path.resolve(process.cwd(), '../frontend/index.html'),
+      path.resolve(__dirname, '../../../frontend/index.html'),
+      path.resolve(__dirname, '../../../../frontend/index.html'),
+    ];
+    const found = candidates.find((p) => fs.existsSync(p));
+    if (found) {
+      reply.type('text/html').send(fs.readFileSync(found, 'utf8'));
     } else {
       reply.send({ status: 'OK', message: 'Concert Booking Backend API Online' });
     }
-  });
+  };
 
-  app.get('/dashboard', async (req, reply) => {
-    const htmlPath = path.resolve(__dirname, '../../../../frontend/index.html');
-    if (fs.existsSync(htmlPath)) {
-      reply.type('text/html').send(fs.readFileSync(htmlPath, 'utf8'));
-    } else {
-      reply.send({ status: 'OK', message: 'Concert Booking Backend API Online' });
-    }
-  });
+  app.get('/', async (req, reply) => serveFrontend(reply));
+  app.get('/dashboard', async (req, reply) => serveFrontend(reply));
 }
