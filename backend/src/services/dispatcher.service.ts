@@ -112,7 +112,7 @@ export class DispatcherService {
 
       // 3. Lock oldest FIFO WAITING queue entry
       const qRes = await client.query(
-        `SELECT entry_id, user_id, queue_sequence 
+        `SELECT entry_id, user_id, queue_sequence, selected_seats 
          FROM queue_entries 
          WHERE event_id = $1 AND status = 'WAITING' 
          ORDER BY queue_sequence ASC 
@@ -125,16 +125,38 @@ export class DispatcherService {
       }
       const queueEntry = qRes.rows[0];
 
-      // 4. Find next AVAILABLE seat
-      const seatRes = await client.query(
-        `SELECT seat_id, label, version 
-         FROM seats 
-         WHERE event_id = $1 AND status = 'AVAILABLE' 
-         ORDER BY label ASC 
-         LIMIT 1 
-         FOR UPDATE`,
-        [eventId]
-      );
+      // 4. Find next AVAILABLE seat (preferring user's selected seats if available)
+      let seatRes: any = null;
+      let preferredSeats: string[] = [];
+      if (queueEntry.selected_seats) {
+        try {
+          preferredSeats = JSON.parse(queueEntry.selected_seats);
+        } catch {}
+      }
+
+      if (preferredSeats.length > 0) {
+        seatRes = await client.query(
+          `SELECT seat_id, label, version 
+           FROM seats 
+           WHERE event_id = $1 AND status = 'AVAILABLE' AND (label = ANY($2) OR seat_id = ANY($2))
+           ORDER BY label ASC 
+           LIMIT 1 
+           FOR UPDATE`,
+          [eventId, preferredSeats]
+        );
+      }
+
+      if (!seatRes || seatRes.rows.length === 0) {
+        seatRes = await client.query(
+          `SELECT seat_id, label, version 
+           FROM seats 
+           WHERE event_id = $1 AND status = 'AVAILABLE' 
+           ORDER BY label ASC 
+           LIMIT 1 
+           FOR UPDATE`,
+          [eventId]
+        );
+      }
 
       if (seatRes.rows.length === 0) {
         // Check if all seats are SOLD (definitively exhausted)

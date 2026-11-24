@@ -111,15 +111,31 @@ export function registerRoutes(
     };
   });
 
-  // --- 2. Queue Routes ---
+  // --- 2. Seat Map & Queue Routes ---
+  app.get('/events/:id/seats', async (req, reply) => {
+    const { id: eventId } = req.params as { id: string };
+    const db = await getDb();
+    const res = await db.query(
+      `SELECT seat_id, label, status 
+       FROM seats 
+       WHERE event_id = $1 
+       ORDER BY label ASC 
+       LIMIT 100`,
+      [eventId]
+    );
+    return { eventId, seats: res.rows };
+  });
+
   app.post('/events/:id/queue', async (req, reply) => {
     const { id: eventId } = req.params as { id: string };
     const userId = getUserId(req);
+    const body = (req.body as any) || {};
     const idempotencyKey =
-      (req.headers['idempotency-key'] as string) || (req.body as any)?.idempotencyKey;
+      (req.headers['idempotency-key'] as string) || body.idempotencyKey;
+    const selectedSeats = body.selectedSeats as string[] | undefined;
 
     try {
-      const result = await queueService.joinQueue(eventId, userId, idempotencyKey);
+      const result = await queueService.joinQueue(eventId, userId, idempotencyKey, selectedSeats);
 
       // Trigger dispatcher non-blockingly so if any gateway is free, this user is immediately scheduled
       dispatcherService.triggerDispatch(eventId);
@@ -199,6 +215,42 @@ export function registerRoutes(
     return reply.code(200).send({ received: true, ...outcome });
   });
 
+  // Direct payment submission from Payment Page
+  app.post('/payments/submit', async (req, reply) => {
+    const body = (req.body as any) || {};
+    const assignmentId = body.assignmentId;
+    const outcome = body.outcome === 'FAILED' ? 'FAILED' : 'SUCCESS';
+
+    const db = await getDb();
+    const assignInfo = await db.query(
+      `SELECT a.assignment_id, p.payment_id, p.provider_reference 
+       FROM assignments a
+       JOIN payments p ON a.assignment_id = p.assignment_id
+       WHERE a.assignment_id = $1`,
+      [assignmentId]
+    );
+
+    if (assignInfo.rows.length === 0) {
+      return reply.code(404).send({ error: 'ASSIGNMENT_NOT_FOUND', message: `Assignment ${assignmentId} not found` });
+    }
+
+    const pay = assignInfo.rows[0];
+    const provRef = pay.provider_reference || `sim_sub_${Date.now()}`;
+    const result: PaymentResult = {
+      assignmentId,
+      paymentId: pay.payment_id,
+      status: outcome,
+      providerReference: provRef,
+      providerEventId: `ev_submit_${Date.now()}`,
+      durationMs: 50,
+      reason: outcome === 'FAILED' ? 'PAYMENT_DECLINED_BY_USER' : undefined,
+      signature: simulator.generateSignature(pay.payment_id, outcome, provRef),
+    };
+
+    const res = await resultHandler.handlePaymentResult(result);
+    return reply.code(200).send({ received: true, ...res, outcome });
+  });
+
   // --- 5. Bookings Routes ---
   app.get('/me/bookings', async (req, reply) => {
     const userId = getUserId(req);
@@ -215,6 +267,55 @@ export function registerRoutes(
     );
 
     return { bookings: res.rows };
+  });
+
+  // User Profile & Booking Stats
+  app.get('/me/profile', async (req, reply) => {
+    const userId = getUserId(req);
+    const db = await getDb();
+
+    const [userRes, attemptsRes, bookingsRes] = await Promise.all([
+      db.query(`SELECT user_id, name, email, created_at FROM users WHERE user_id = $1`, [userId]),
+      db.query(
+        `SELECT 
+           COUNT(*) as total_attempts,
+           COUNT(*) FILTER (WHERE status = 'CONFIRMED') as confirmed_count,
+           COUNT(*) FILTER (WHERE status = 'FAILED') as failed_count,
+           COUNT(*) FILTER (WHERE status IN ('WAITING', 'PROCESSING')) as in_progress_count
+         FROM queue_entries WHERE user_id = $1`,
+        [userId]
+      ),
+      db.query(
+        `SELECT b.booking_id, b.confirmed_at, s.label as seat_label, e.title as event_title, e.event_time, e.venue, p.amount_minor, p.currency
+         FROM bookings b
+         JOIN seats s ON b.seat_id = s.seat_id
+         JOIN events e ON s.event_id = e.event_id
+         JOIN payments p ON b.payment_id = p.payment_id
+         WHERE b.user_id = $1
+         ORDER BY b.confirmed_at DESC`,
+        [userId]
+      ),
+    ]);
+
+    const urow = userRes.rows[0] || { user_id: userId, name: `User ${userId}`, email: `${userId}@example.com` };
+    const arow = attemptsRes.rows[0] || {};
+    const totalAttempts = parseInt(arow.total_attempts || '0', 10);
+    const confirmedCount = parseInt(arow.confirmed_count || '0', 10);
+    const failedCount = parseInt(arow.failed_count || '0', 10);
+    const inProgressCount = parseInt(arow.in_progress_count || '0', 10);
+    const successRate = totalAttempts > 0 ? ((confirmedCount / totalAttempts) * 100).toFixed(1) : '0.0';
+
+    return {
+      user: urow,
+      stats: {
+        totalAttempts,
+        confirmedCount,
+        failedCount,
+        inProgressCount,
+        successRate: `${successRate}%`,
+      },
+      bookings: bookingsRes.rows,
+    };
   });
 
   app.get('/bookings/:id', async (req, reply) => {

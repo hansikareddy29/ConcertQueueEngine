@@ -28,10 +28,12 @@ export class QueueService {
   async joinQueue(
     eventId: string,
     userId: string,
-    idempotencyKey?: string
+    idempotencyKey?: string,
+    selectedSeats?: string[]
   ): Promise<JoinQueueResult> {
     const db = await this.getDatabase();
     const idemKey = idempotencyKey || `auto_${userId}_${Date.now()}`;
+    const seatsStr = selectedSeats && selectedSeats.length > 0 ? JSON.stringify(selectedSeats) : null;
 
     return await db.withTransaction(async (client) => {
       // Ensure user exists in users table (auto-provision test user)
@@ -136,9 +138,9 @@ export class QueueService {
 
       // Insert new queue entry
       await client.query(
-        `INSERT INTO queue_entries (entry_id, event_id, user_id, attempt_number, queue_sequence, status, joined_at)
-         VALUES ($1, $2, $3, 1, $4, 'WAITING', $5)`,
-        [entryId, eventId, userId, seq, joinedAt]
+        `INSERT INTO queue_entries (entry_id, event_id, user_id, attempt_number, queue_sequence, status, selected_seats, joined_at)
+         VALUES ($1, $2, $3, 1, $4, 'WAITING', $5, $6)`,
+        [entryId, eventId, userId, seq, seatsStr, joinedAt]
       );
 
       const result: JoinQueueResult = {
@@ -176,7 +178,7 @@ export class QueueService {
     const db = await this.getDatabase();
 
     const entryRes = await db.query(
-      `SELECT q.entry_id, q.queue_sequence, q.status, q.joined_at, q.assigned_at, q.completed_at,
+      `SELECT q.entry_id, q.queue_sequence, q.status, q.selected_seats, q.joined_at, q.assigned_at, q.completed_at,
               a.assignment_id, a.gateway_id, a.state as assignment_state, a.deadline,
               r.seat_id, s.label as seat_label,
               b.booking_id, b.confirmed_at
