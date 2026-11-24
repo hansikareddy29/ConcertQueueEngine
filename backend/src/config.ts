@@ -5,7 +5,7 @@ export const CONFIG = {
   DEFAULT_GATEWAY_COUNT: parseInt(process.env.GATEWAY_COUNT || '3', 10),
   DEFAULT_EVENT_ID: process.env.DEFAULT_EVENT_ID || 'evt_concert_2026',
   TOTAL_SEATS: parseInt(process.env.TOTAL_SEATS || '20000', 10),
-  PAYMENT_TIMEOUT_MS: parseInt(process.env.PAYMENT_TIMEOUT_MS || '5000', 10),
+  PAYMENT_TIMEOUT_MS: parseInt(process.env.PAYMENT_TIMEOUT_MS || '300000', 10),
   RECOVERY_INTERVAL_MS: parseInt(process.env.RECOVERY_INTERVAL_MS || '3000', 10),
   SIMULATOR_SUCCESS_RATE: parseFloat(process.env.SIMULATOR_SUCCESS_RATE || '0.90'),
   SIMULATOR_MIN_LATENCY_MS: parseInt(process.env.SIMULATOR_MIN_LATENCY_MS || '50', 10),

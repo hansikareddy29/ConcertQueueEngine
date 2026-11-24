@@ -115,15 +115,79 @@ export function registerRoutes(
   app.get('/events/:id/seats', async (req, reply) => {
     const { id: eventId } = req.params as { id: string };
     const db = await getDb();
+    
+    // Order HELD first, then SOLD, then AVAILABLE so held seats are immediately surfaced
     const res = await db.query(
-      `SELECT seat_id, label, status 
+      `SELECT seat_id, label, status, current_reservation_id 
        FROM seats 
        WHERE event_id = $1 
-       ORDER BY label ASC 
-       LIMIT 100`,
+       ORDER BY 
+         CASE status 
+           WHEN 'HELD' THEN 1 
+           WHEN 'SOLD' THEN 2 
+           ELSE 3 
+         END, 
+         label ASC 
+       LIMIT 300`,
       [eventId]
     );
-    return { eventId, seats: res.rows };
+
+    const counts = await db.query(
+      `SELECT 
+         COUNT(*) as total_seats,
+         COUNT(*) FILTER (WHERE status = 'AVAILABLE') as available_seats,
+         COUNT(*) FILTER (WHERE status = 'HELD') as held_seats,
+         COUNT(*) FILTER (WHERE status = 'SOLD') as sold_seats
+       FROM seats WHERE event_id = $1`,
+      [eventId]
+    );
+
+    const c = counts.rows[0];
+    return {
+      eventId,
+      totalSeats: parseInt(c.total_seats || '0', 10),
+      metrics: {
+        available: parseInt(c.available_seats || '0', 10),
+        held: parseInt(c.held_seats || '0', 10),
+        sold: parseInt(c.sold_seats || '0', 10),
+      },
+      holdDurationSeconds: 300,
+      seats: res.rows
+    };
+  });
+
+  app.post('/events/:id/queue/cancel', async (req, reply) => {
+    const { id: eventId } = req.params as { id: string };
+    const userId = getUserId(req);
+    const db = await getDb();
+
+    const asgnRes = await db.query(
+      `SELECT a.assignment_id, a.gateway_id, a.reservation_id, p.payment_id
+       FROM assignments a
+       JOIN reservations r ON a.reservation_id = r.reservation_id
+       LEFT JOIN payments p ON a.assignment_id = p.assignment_id
+       WHERE r.event_id = $1 AND r.user_id = $2 AND a.state = 'ACTIVE'
+       LIMIT 1`,
+      [eventId, userId]
+    );
+
+    if (asgnRes.rows.length > 0) {
+      const row = asgnRes.rows[0];
+      await resultHandler.handlePaymentResult({
+        assignmentId: row.assignment_id,
+        paymentId: row.payment_id || `pay_${Date.now()}`,
+        status: 'CANCELLED',
+        providerReference: `user_cancelled_${Date.now()}`,
+        providerEventId: `ev_cancel_${Date.now()}`,
+        durationMs: 0,
+        reason: 'USER_CANCELLED_HOLD',
+        signature: 'simulated_sig',
+      });
+      dispatcherService.triggerDispatch(eventId);
+      return { success: true, message: 'Hold cancelled and seats released' };
+    }
+
+    return { success: true, message: 'No active hold found' };
   });
 
   app.post('/events/:id/queue', async (req, reply) => {

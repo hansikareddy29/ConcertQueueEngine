@@ -220,6 +220,16 @@ export class DispatcherService {
         [reservationId, seat.seat_id]
       );
 
+      // If user selected multiple preferred seats, also hold them under this reservation
+      if (preferredSeats.length > 1) {
+        await client.query(
+          `UPDATE seats 
+           SET status = 'HELD', current_reservation_id = $1, version = version + 1 
+           WHERE event_id = $2 AND (label = ANY($3) OR seat_id = ANY($3)) AND status = 'AVAILABLE'`,
+          [reservationId, eventId, preferredSeats]
+        );
+      }
+
       // Mark gateway BUSY
       await client.query(
         `UPDATE payment_gateways 

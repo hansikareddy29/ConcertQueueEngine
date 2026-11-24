@@ -126,7 +126,7 @@ export class ResultHandler {
 
         // Mark seat SOLD (verified reservation owner)
         await client.query(
-          `UPDATE seats SET status = 'SOLD', version = version + 1 WHERE seat_id = $1 AND current_reservation_id = $2`,
+          `UPDATE seats SET status = 'SOLD', version = version + 1 WHERE seat_id = $1 OR current_reservation_id = $2`,
           [seatId, reservationId]
         );
 
@@ -170,7 +170,7 @@ export class ResultHandler {
         await client.query(
           `UPDATE seats 
            SET status = 'AVAILABLE', current_reservation_id = NULL, version = version + 1 
-           WHERE seat_id = $1 AND current_reservation_id = $2`,
+           WHERE seat_id = $1 OR current_reservation_id = $2`,
           [seatId, reservationId]
         );
 
