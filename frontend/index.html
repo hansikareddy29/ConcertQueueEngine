@@ -304,71 +304,359 @@
       font-weight: 700;
     }
 
-    /* Circular Arena SVG Wrapper */
-    .circular-arena-wrapper {
-      background: radial-gradient(circle at center, #111827 0%, #080c14 70%);
+    /* ==================================================== */
+    /* BOOKMYSHOW SEAT MAP STYLES                           */
+    /* ==================================================== */
+    .bms-seatmap-wrapper {
+      background: radial-gradient(ellipse at top, #111a2e 0%, #080c14 75%);
       border: 1px solid var(--border-strong);
       border-radius: var(--radius-lg);
-      padding: 24px;
+      padding: 16px 16px 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+      gap: 12px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.65);
       position: relative;
-      overflow: hidden;
       width: 100%;
+      max-height: calc(100vh - 195px);
+      overflow-y: auto;
+      overflow-x: hidden;
     }
 
-    .circular-arena-svg {
+    /* Screen / Stage Curved Banner */
+    .bms-screen-wrapper {
       width: 100%;
-      max-width: 720px;
-      height: auto;
-      max-height: 720px;
+      max-width: 620px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 2px 0 10px;
+      position: relative;
+    }
+    .bms-screen-arc {
+      width: 82%;
+      height: 24px;
+      border-top: 3px solid #38bdf8;
+      border-radius: 50% 50% 0 0 / 18px 18px 0 0;
+      background: linear-gradient(180deg, rgba(56, 189, 248, 0.22) 0%, rgba(56, 189, 248, 0.01) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 -6px 18px rgba(56, 189, 248, 0.35);
+      position: relative;
+    }
+    .bms-screen-text {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      color: #bae6fd;
+      text-transform: uppercase;
+      text-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+    }
+    .bms-screen-subtext {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      letter-spacing: 0.04em;
+    }
+
+    /* Auditorium Layout Grid - Centered & Single Screen View */
+    .bms-auditorium {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+      max-width: 950px;
+      margin: 0 auto;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Adaptive compact sizing so all 400-1000 seats fit in one viewport without sliding */
+    .auditorium-1000 .bms-seat {
+      width: 15px;
+      height: 14px;
+      min-width: 15px;
+      font-size: 7px;
+      border-radius: 2px;
+    }
+    .auditorium-1000 .bms-row { gap: 2px; }
+    .auditorium-1000 .bms-seat-block { gap: 2px; }
+    .auditorium-1000 .bms-tier-rows { gap: 2px; }
+    .auditorium-1000 .bms-tier-section { gap: 4px; }
+    .auditorium-1000 .bms-tier-header { margin-bottom: 2px; }
+    .auditorium-1000 .bms-tier-badge { padding: 2px 8px; font-size: 0.72rem; }
+    .auditorium-1000 .bms-row-label { width: 18px; font-size: 0.68rem; }
+    .auditorium-1000 .bms-aisle { width: 18px; }
+
+    .auditorium-750 .bms-seat {
+      width: 18px;
+      height: 15px;
+      min-width: 18px;
+      font-size: 8px;
+      border-radius: 2.5px;
+    }
+    .auditorium-750 .bms-row { gap: 3px; }
+    .auditorium-750 .bms-seat-block { gap: 3px; }
+    .auditorium-750 .bms-tier-rows { gap: 3px; }
+    .auditorium-750 .bms-tier-section { gap: 6px; }
+    .auditorium-750 .bms-aisle { width: 22px; }
+
+    .auditorium-500 .bms-seat {
+      width: 22px;
+      height: 18px;
+      min-width: 22px;
+      font-size: 9px;
+      border-radius: 3px;
+    }
+    .auditorium-500 .bms-row { gap: 4px; }
+    .auditorium-500 .bms-seat-block { gap: 4px; }
+    .auditorium-500 .bms-tier-rows { gap: 4px; }
+    .auditorium-500 .bms-tier-section { gap: 8px; }
+    .auditorium-500 .bms-aisle { width: 26px; }
+
+    .auditorium-400 .bms-seat {
+      width: 25px;
+      height: 20px;
+      min-width: 25px;
+      font-size: 10px;
+      border-radius: 4px;
+    }
+    .auditorium-400 .bms-row { gap: 5px; }
+    .auditorium-400 .bms-seat-block { gap: 5px; }
+    .auditorium-400 .bms-tier-rows { gap: 5px; }
+    .auditorium-400 .bms-tier-section { gap: 10px; }
+    .auditorium-400 .bms-aisle { width: 30px; }
+
+    /* Tier Sections */
+    .bms-tier-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+    }
+    .bms-tier-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 2px;
+    }
+    .bms-tier-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-left: 3px solid var(--tier-accent, var(--emerald));
+      border-radius: var(--radius-sm);
+      padding: 4px 10px;
+    }
+    .bms-tier-name {
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+    .bms-tier-price {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #34d399;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .bms-tier-divider {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--border-strong), transparent);
+    }
+
+    /* Rows */
+    .bms-tier-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+    }
+    .bms-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+    }
+    .bms-row-label {
+      width: 22px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-align: center;
       user-select: none;
     }
+    .bms-seat-block {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .bms-aisle {
+      width: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+    .bms-aisle-line {
+      width: 1px;
+      height: 16px;
+      background: dashed var(--border-subtle);
+      opacity: 0.35;
+    }
 
-    .seat-circle {
+    /* BookMyShow Seat Button */
+    .bms-seat {
+      width: 24px;
+      height: 22px;
+      min-width: 24px;
+      border-radius: 3px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
-      transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-      transform-origin: center;
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      user-select: none;
+      position: relative;
+      outline: none;
     }
-    .seat-circle.available {
-      fill: #26334d;
-      stroke: #3b4d6e;
-      stroke-width: 1.5;
+
+    /* Hover Zoom Magnification for effortless viewing and clicking */
+    .bms-seat:hover:not(.sold):not(.held) {
+      transform: scale(2.0);
+      z-index: 1000;
+      font-size: 11px !important;
+      font-weight: 800;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.95);
+      background: #10b981 !important;
+      color: #ffffff !important;
     }
-    .seat-circle.available:hover {
-      fill: #6366f1;
-      stroke: #a5b4fc;
-      stroke-width: 2.5;
-      filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.8));
+
+    /* Available: Signature BookMyShow Green outline, dark bg, green text */
+    .bms-seat.available {
+      background: rgba(16, 185, 129, 0.04);
+      border: 1.5px solid #10b981;
+      color: #10b981;
     }
-    .seat-circle.selected {
-      fill: #10b981 !important;
-      stroke: #34d399 !important;
-      stroke-width: 2.5 !important;
-      filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.9)) !important;
+
+    /* Selected: Solid vibrant emerald green fill, bold white text */
+    .bms-seat.selected {
+      background: #10b981 !important;
+      border: 1.5px solid #10b981 !important;
+      color: #ffffff !important;
+      font-weight: 800;
+      transform: scale(1.15);
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.85) !important;
+      z-index: 3;
     }
-    .seat-circle.held {
-      fill: #f59e0b !important;
-      stroke: #fbbf24 !important;
-      stroke-width: 2.5 !important;
-      filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.8)) !important;
+
+    /* Held: 2-minute selection hold or 5-minute checkout hold (Vibrant Pulsing Amber) */
+    .bms-seat.held {
+      background: rgba(245, 158, 11, 0.25) !important;
+      border: 1.5px solid #f59e0b !important;
+      color: #fbbf24 !important;
+      box-shadow: 0 0 8px rgba(245, 158, 11, 0.5) !important;
       cursor: not-allowed !important;
-      animation: pulseHeld 2s infinite ease-in-out;
+      animation: pulseHeld 1.6s infinite ease-in-out;
     }
-    @keyframes pulseHeld {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.65; }
+    .bms-seat.held::after {
+      content: '🔒';
+      font-size: 7px;
+      position: absolute;
+      top: -4px;
+      right: -4px;
     }
-    .seat-circle.sold {
-      fill: #131926 !important;
-      stroke: #1f283d !important;
-      stroke-width: 1 !important;
-      opacity: 0.35 !important;
+
+    /* Sold: Distinct Dark Charcoal / Slate with Cross - completely distinct from Hold */
+    .bms-seat.sold {
+      background: #1e2430 !important;
+      border: 1.5px solid #334155 !important;
+      color: #64748b !important;
       cursor: not-allowed !important;
+      opacity: 0.55 !important;
+      pointer-events: none !important;
+      text-decoration: line-through;
     }
+    .bms-seat.sold::after {
+      content: '✕';
+      font-size: 7px;
+      position: absolute;
+      top: 0px;
+      right: 1px;
+      color: #ef4444;
+      font-weight: 800;
+      opacity: 0.85;
+    }
+
+    /* BMS Legend */
+    .bms-legend {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+    .bms-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .bms-legend-box {
+      width: 20px;
+      height: 18px;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .bms-legend-box.avail {
+      background: rgba(16, 185, 129, 0.05);
+      border: 1.5px solid #10b981;
+      color: #10b981;
+    }
+    .bms-legend-box.sel {
+      background: #10b981;
+      border: 1.5px solid #10b981;
+      color: #fff;
+    }
+    .bms-legend-box.hld {
+      background: rgba(245, 158, 11, 0.25);
+      border: 1.5px solid #f59e0b;
+      color: #fbbf24;
+      box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
+    }
+    .bms-legend-box.sld {
+      background: #1e2430;
+      border: 1.5px solid #334155;
+      color: #64748b;
+      position: relative;
+    }
+    .bms-legend-box.sld::after {
+      content: '✕';
+      color: #ef4444;
+      font-size: 8px;
+      font-weight: 800;
+    }
+
+    /* Legacy Fallback Classes */
+    .circular-arena-wrapper { display: none; }
+    .seat-circle { display: none; }
 
     /* 5-Minute Hold Banner on Payment Page */
     .hold-timer-card {
@@ -791,7 +1079,6 @@
 
       <nav class="nav-tabs">
         <button class="nav-btn active" id="btn-nav-events" onclick="goToView('events')">🎵 All Events</button>
-        <button class="nav-btn" id="btn-nav-seatmap" onclick="goToView('seatmap')">🪑 Seat Map</button>
         <button class="nav-btn" id="btn-nav-profile" onclick="goToView('profile')">👤 My Profile & Stats</button>
       </nav>
 
@@ -839,70 +1126,84 @@
         </div>
       </div>
 
-      <!-- Stadium Capacity & Tier Breakdown Cards -->
+      <!-- Auditorium Meta Banner & Live Counters -->
       <div class="stadium-meta-banner">
         <div>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 1.3rem;">🏟️</span>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 1.5rem;">🎬</span>
             <div>
-              <div id="stadium-capacity-title" style="font-size: 1.15rem; font-weight: 800; color: #fff;">360° Circular Stadium Arena</div>
-              <div id="stadium-capacity-subtitle" style="font-size: 0.82rem; color: var(--text-secondary);">Customized Circular Seating Map</div>
+              <div id="stadium-capacity-title" style="font-size: 1.15rem; font-weight: 800; color: #fff;">Auditorium Seating Layout</div>
+              <div id="stadium-capacity-subtitle" style="font-size: 0.82rem; color: var(--text-secondary);">BookMyShow Tiered Theater & Live Seat Selection</div>
             </div>
           </div>
         </div>
         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
           <span class="badge badge-emerald" id="sm-stat-available">Available: -</span>
-          <span class="badge" style="background: rgba(245, 158, 11, 0.2); border: 1px solid var(--amber); color: #fbbf24;" id="sm-stat-held">🔒 On Hold (5 min): 0</span>
+          <span class="badge" style="background: rgba(245, 158, 11, 0.2); border: 1px solid var(--amber); color: #fbbf24;" id="sm-stat-held">🔒 On Hold: 0</span>
+          <span class="badge" id="sm-stat-timer" style="display: none; background: rgba(16, 185, 129, 0.15); border: 1px solid var(--emerald); color: #34d399; font-weight: 700;">⏱️ Selection Hold: 02:00</span>
           <span class="badge" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5;" id="sm-stat-sold">Sold: 0</span>
         </div>
       </div>
 
-      <!-- Dynamic Tier Breakdown Grid -->
-      <div class="stadium-tiers-grid" id="stadium-tiers-container">
-        <!-- Dynamically rendered for each event (20,000 / 2,500 / 3,000 / 1,500) -->
-      </div>
-
-      <!-- Circular Arena SVG & Quick Picker Wrapper -->
-      <div class="circular-arena-wrapper">
+      <!-- BookMyShow Auditorium Seating Canvas -->
+      <div class="bms-seatmap-wrapper">
         <!-- Quick Seat Quantity Selector -->
         <div class="qty-picker" style="background: rgba(16, 22, 35, 0.85); backdrop-filter: blur(8px);">
           <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">⚡ Quick Pick Tickets:</span>
-          <button class="qty-btn" onclick="quickSelectCircularSeats(1)">1</button>
-          <button class="qty-btn" onclick="quickSelectCircularSeats(2)">2</button>
-          <button class="qty-btn" onclick="quickSelectCircularSeats(3)">3</button>
-          <button class="qty-btn" onclick="quickSelectCircularSeats(4)">4</button>
-          <button class="qty-btn" onclick="quickSelectCircularSeats(6)">6</button>
+          <button class="qty-btn" onclick="quickSelectSeats(1)">1</button>
+          <button class="qty-btn" onclick="quickSelectSeats(2)">2</button>
+          <button class="qty-btn" onclick="quickSelectSeats(3)">3</button>
+          <button class="qty-btn" onclick="quickSelectSeats(4)">4</button>
+          <button class="qty-btn" onclick="quickSelectSeats(6)">6</button>
           <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.78rem;" onclick="clearSelectedSeats()">Reset</button>
         </div>
 
-        <!-- Legend -->
-        <div class="seat-legend" style="margin-top: 4px;">
-          <div class="legend-item"><div class="legend-box" style="background: #26334d; border: 1px solid #3b4d6e; border-radius: 50%;"></div> Available</div>
-          <div class="legend-item"><div class="legend-box selected" style="border-radius: 50%;"></div> Selected (Your Pick)</div>
-          <div class="legend-item"><div class="legend-box" style="background: #f59e0b; border: 1px solid #fbbf24; border-radius: 50%; box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);"></div> 🔒 On Hold (5 min lock)</div>
-          <div class="legend-item"><div class="legend-box sold" style="border-radius: 50%;"></div> Sold Out</div>
+        <!-- BookMyShow Screen / Stage Curved Banner -->
+        <div class="bms-screen-wrapper">
+          <div class="bms-screen-arc">
+            <span class="bms-screen-text">STAGE / SCREEN THIS WAY</span>
+          </div>
+          <div class="bms-screen-subtext">All eyes this way please!</div>
         </div>
 
-        <!-- Interactive 360° Circular Stadium SVG -->
-        <div style="width: 100%; display: flex; justify-content: center; position: relative;">
-          <svg id="circular-stadium-svg" class="circular-arena-svg" viewBox="0 0 760 760" xmlns="http://www.w3.org/2000/svg">
-            <!-- Rendered dynamically by buildCircularSeatMap -->
-          </svg>
+        <!-- Dynamic Auditorium Tier Sections & Rows Container -->
+        <div id="bms-auditorium-container" class="bms-auditorium">
+          <!-- Dynamically populated by renderBookMyShowSeatMap -->
+        </div>
+
+        <!-- BookMyShow Status Legend -->
+        <div class="bms-legend">
+          <div class="bms-legend-item">
+            <div class="bms-legend-box avail"></div>
+            <span>Available</span>
+          </div>
+          <div class="bms-legend-item">
+            <div class="bms-legend-box sel"></div>
+            <span>Selected</span>
+          </div>
+          <div class="bms-legend-item">
+            <div class="bms-legend-box hld">🔒</div>
+            <span>On Hold</span>
+          </div>
+          <div class="bms-legend-item">
+            <div class="bms-legend-box sld"></div>
+            <span>Sold Out</span>
+          </div>
         </div>
       </div>
 
       <!-- Sticky Seat Selection Bottom Bar -->
       <div class="seat-selection-bar">
         <div>
-          <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Selected Arena Seats</div>
-          <div style="font-size: 1.15rem; font-weight: 800; color: #34d399;" id="bar-selected-seats">None (Click circular seats above)</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Selected Seats</div>
+          <div style="font-size: 1.15rem; font-weight: 800; color: #34d399;" id="bar-selected-seats">None</div>
         </div>
         <div>
           <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Total Amount</div>
-          <div style="font-size: 1.4rem; font-weight: 800; color: #fff;" id="bar-total-price">$0.00</div>
+          <div style="font-size: 1.4rem; font-weight: 800; color: #fff;" id="bar-total-price">₹0.00</div>
         </div>
-        <button class="btn btn-primary" id="btn-proceed-booking" onclick="proceedToQueue()" disabled>
-          🔒 Hold Selected Seats & Proceed to Pay (5-Min Lock) →
+        <button class="btn btn-primary" id="btn-proceed-booking" onclick="proceedToQueue()" style="padding: 10px 24px; min-width: 140px; width: auto; font-size: 0.92rem; font-weight: 700;" disabled>
+          Book Now →
         </button>
       </div>
     </section>
@@ -987,7 +1288,6 @@
     <section id="view-payment">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <h2 style="font-size: 1.5rem; font-weight: 800; color: #fff;">💳 Complete Payment</h2>
-        <span class="badge badge-emerald" id="assigned-gateway-pill">🔒 Checkout Session Ready</span>
       </div>
 
       <!-- 5-Minute Seat Hold Countdown Banner -->
@@ -1006,7 +1306,7 @@
             <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Hold Time Remaining</div>
             <div id="payment-hold-timer-display" style="font-size: 2.2rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: #fbbf24; line-height: 1.1;">05:00</div>
           </div>
-          <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="cancelHoldAndReturn()">Cancel & Release</button>
+          <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="cancelHoldAndReturn()">Cancel</button>
         </div>
       </div>
 
@@ -1063,15 +1363,15 @@
           <div style="border-top: 1px solid var(--border-subtle); padding-top: 14px; display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem;">
             <div style="display: flex; justify-content: space-between;">
               <span style="color: var(--text-muted);">Tickets Subtotal</span>
-              <span id="pay-summary-subtotal">$0.00</span>
+              <span id="pay-summary-subtotal">₹0.00</span>
             </div>
             <div style="display: flex; justify-content: space-between;">
               <span style="color: var(--text-muted);">Booking Service Fee</span>
-              <span>$5.00</span>
+              <span>₹40.00</span>
             </div>
             <div style="display: flex; justify-content: space-between; font-size: 1.15rem; font-weight: 800; color: #fff; border-top: 1px solid var(--border-subtle); padding-top: 10px; margin-top: 4px;">
               <span>Total Payable</span>
-              <span id="pay-summary-total" style="color: #34d399;">$0.00</span>
+              <span id="pay-summary-total" style="color: #34d399;">₹0.00</span>
             </div>
           </div>
         </div>
@@ -1198,46 +1498,10 @@
     let holdTimer = null;
     let holdSecondsRemaining = 300; // 5 minutes
 
-    // Event customized stadium configurations
-    const STADIUM_CONFIGS = {
-      'evt_concert_2026': {
-        name: 'National Arena (360° Circular Stadium)',
-        totalCapacity: 20000,
-        tiers: [
-          { name: '★ VIP Golden Ring', seats: 2000, price: 150.00, color: '#fbbf24', rings: [1, 2] },
-          { name: '◆ Lower Bowl Rings', seats: 6000, price: 150.00, color: '#818cf8', rings: [3, 4] },
-          { name: '▲ Club Level Tier', seats: 5000, price: 150.00, color: '#38bdf8', rings: [5] },
-          { name: '● Upper Grandstand', seats: 7000, price: 150.00, color: '#94a3b8', rings: [6] }
-        ]
-      },
-      'evt_coldplay_2026': {
-        name: 'Wembley Stadium (Circular Bowl)',
-        totalCapacity: 2500,
-        tiers: [
-          { name: '★ VIP Front Circle', seats: 500, price: 125.00, color: '#fbbf24', rings: [1, 2] },
-          { name: '◆ Lower Bowl', seats: 1000, price: 125.00, color: '#34d399', rings: [3, 4] },
-          { name: '● Upper Balcony', seats: 1000, price: 125.00, color: '#94a3b8', rings: [5, 6] }
-        ]
-      },
-      'evt_taylor_2026': {
-        name: 'SoFi Stadium (360° Circular Amphitheater)',
-        totalCapacity: 3000,
-        tiers: [
-          { name: '★ VIP Golden Circle', seats: 600, price: 220.00, color: '#fbbf24', rings: [1, 2] },
-          { name: '◆ Mid-Bowl Circle', seats: 1200, price: 220.00, color: '#c084fc', rings: [3, 4] },
-          { name: '● Upper Bowl Rim', seats: 1200, price: 220.00, color: '#94a3b8', rings: [5, 6] }
-        ]
-      },
-      'evt_electronic_2026': {
-        name: 'Bayfront Circular Dome',
-        totalCapacity: 1500,
-        tiers: [
-          { name: '★ VIP Dome Ring', seats: 300, price: 85.00, color: '#fbbf24', rings: [1, 2] },
-          { name: '◆ Main Dance Floor', seats: 600, price: 85.00, color: '#38bdf8', rings: [3, 4] },
-          { name: '● Lounge Mezzanine', seats: 600, price: 85.00, color: '#94a3b8', rings: [5, 6] }
-        ]
-      }
-    };
+    // 2-Minute Selection Hold State & 5-Minute Checkout Hold State
+    let selectionHoldTimer = null;
+    let selectionHoldRemaining = 120; // 2 minutes (120 seconds)
+    let selectedSeatMap = new Map(); // label -> { label, row, num, price, tierName }
 
     // --- On Load ---
     window.addEventListener('DOMContentLoaded', async () => {
@@ -1258,9 +1522,12 @@
         }
       });
 
-      document.getElementById('btn-nav-events').classList.toggle('active', viewId === 'events');
-      document.getElementById('btn-nav-seatmap').classList.toggle('active', viewId === 'seatmap');
-      document.getElementById('btn-nav-profile').classList.toggle('active', viewId === 'profile');
+      const btnEvents = document.getElementById('btn-nav-events');
+      if (btnEvents) btnEvents.classList.toggle('active', viewId === 'events');
+      const btnSeatmap = document.getElementById('btn-nav-seatmap');
+      if (btnSeatmap) btnSeatmap.classList.toggle('active', viewId === 'seatmap');
+      const btnProfile = document.getElementById('btn-nav-profile');
+      if (btnProfile) btnProfile.classList.toggle('active', viewId === 'profile');
 
       if (viewId === 'events') {
         loadEventsCatalog();
@@ -1293,7 +1560,7 @@
 
         allEvents.forEach((evt, idx) => {
           const grad = gradients[idx % gradients.length];
-          const priceStr = `$${(evt.priceMinor / 100).toFixed(2)}`;
+          const priceStr = `₹${((evt.priceMinor || 250000) / 100).toLocaleString('en-IN')}`;
           const avail = evt.metrics.availableSeats;
           const total = evt.totalSeats;
           const held = evt.metrics.heldSeats || 0;
@@ -1303,7 +1570,7 @@
           card.className = 'event-card';
           card.innerHTML = `
             <div class="event-banner" style="background: ${grad};">
-              <span class="badge" style="background: rgba(0,0,0,0.4); color: #fff;">360° LIVE STADIUM</span>
+              <span class="badge" style="background: rgba(0,0,0,0.4); color: #fff;">LIVE AUDITORIUM</span>
               <span style="font-weight: 800; font-size: 1.15rem; color: #34d399; font-family: 'JetBrains Mono', monospace;">${priceStr}</span>
             </div>
             <div class="event-body">
@@ -1337,7 +1604,7 @@
       }
     }
 
-    // --- 2. Circular Seat Map Logic ---
+    // --- 2. Interactive BookMyShow Auditorium Map Logic ---
     async function initUnifiedSeatMap() {
       if (allEvents.length === 0) {
         try {
@@ -1357,15 +1624,15 @@
       if (sel && allEvents.length > 0) {
         sel.innerHTML = allEvents.map(e => 
           `<option value="${e.eventId}" ${currentEvent && e.eventId === currentEvent.eventId ? 'selected' : ''}>
-            ${e.title} ($${(e.priceMinor / 100).toFixed(2)})
+            ${e.title} (₹${((e.priceMinor || 250000) / 100).toLocaleString('en-IN')})
           </option>`
         ).join('');
       }
 
       if (currentEvent) {
         document.getElementById('sm-event-title').textContent = currentEvent.title;
-        document.getElementById('sm-event-venue').textContent = `${currentEvent.venue} • $${(currentEvent.priceMinor / 100).toFixed(2)}`;
-        await buildCircularSeatMap(currentEvent.eventId);
+        document.getElementById('sm-event-venue').textContent = `${currentEvent.venue} • ₹${((currentEvent.priceMinor || 250000) / 100).toLocaleString('en-IN')}`;
+        await renderBookMyShowSeatMap(currentEvent.eventId);
       }
     }
 
@@ -1384,10 +1651,12 @@
 
       if (currentEvent) {
         document.getElementById('sm-event-title').textContent = currentEvent.title;
-        document.getElementById('sm-event-venue').textContent = `${currentEvent.venue} • $${(currentEvent.priceMinor / 100).toFixed(2)}`;
+        document.getElementById('sm-event-venue').textContent = `${currentEvent.venue} • ₹${((currentEvent.priceMinor || 250000) / 100).toLocaleString('en-IN')}`;
+        stopSelectionTimer();
         selectedSeats = [];
+        selectedSeatMap.clear();
         updateSeatSelectionBar();
-        await buildCircularSeatMap(currentEvent.eventId);
+        await renderBookMyShowSeatMap(currentEvent.eventId);
       }
     }
 
@@ -1396,8 +1665,10 @@
         const res = await fetch(`/events/${eventId}`);
         currentEvent = await res.json();
 
-        // Clear any previous event's selected seats to ensure independent seat maps
+        // Clear previous event's selected seats
+        stopSelectionTimer();
         selectedSeats = [];
+        selectedSeatMap.clear();
         updateSeatSelectionBar();
 
         goToView('seatmap');
@@ -1406,230 +1677,493 @@
       }
     }
 
-    // --- Render Customized 360° Circular Stadium ---
-    async function buildCircularSeatMap(eventId) {
-      const svg = document.getElementById('circular-stadium-svg');
-      const cfg = STADIUM_CONFIGS[eventId] || {
-        name: `${currentEvent.venue} Circular Stadium`,
-        totalCapacity: currentEvent.totalSeats || 20000,
-        tiers: [
-          { name: '★ VIP Golden Ring', seats: Math.floor(currentEvent.totalSeats * 0.1), price: currentEvent.priceMinor / 100, color: '#fbbf24', rings: [1, 2] },
-          { name: '◆ Lower Bowl', seats: Math.floor(currentEvent.totalSeats * 0.3), price: currentEvent.priceMinor / 100, color: '#818cf8', rings: [3, 4] },
-          { name: '● Upper Grandstand', seats: Math.floor(currentEvent.totalSeats * 0.6), price: currentEvent.priceMinor / 100, color: '#94a3b8', rings: [5, 6] }
-        ]
-      };
+    // --- Render BookMyShow Theater Auditorium Map ---
+    async function renderBookMyShowSeatMap(eventId) {
+      const container = document.getElementById('bms-auditorium-container');
+      if (!container) return;
 
-      // 1. Update Title and Subtitle with Exact Customized Capacity
-      document.getElementById('stadium-capacity-title').textContent = `${cfg.name} — ${cfg.totalCapacity.toLocaleString()} Seats`;
-      document.getElementById('stadium-capacity-subtitle').textContent = `360° Circular Amphitheater • Center Stage Performance`;
+      const basePrice = currentEvent ? (currentEvent.priceMinor / 100) : 2500.0;
 
-      // 2. Render Tier Breakdown Cards
-      const tiersContainer = document.getElementById('stadium-tiers-container');
-      tiersContainer.innerHTML = '';
-      cfg.tiers.forEach(t => {
-        const card = document.createElement('div');
-        card.className = 'stadium-tier-card';
-        card.style.setProperty('--tier-accent', t.color);
-        card.innerHTML = `
-          <div class="tier-name" style="color: ${t.color};">${t.name}</div>
-          <div class="tier-seats">${t.seats.toLocaleString()} <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">Seats</span></div>
-          <div class="tier-price">$${t.price.toFixed(2)} / ticket</div>
-        `;
-        tiersContainer.appendChild(card);
-      });
-
-      // 3. Fetch live seats (which prioritize HELD seats first)
+      // 1. Fetch live seats and layout
+      let layoutRows = [];
       let backendSeats = [];
-      let metrics = { available: cfg.totalCapacity, held: 0, sold: 0 };
+      let metrics = { available: 500, held: 0, sold: 0 };
+      let totalCapacity = 500;
+
       try {
-        const res = await fetch(`/events/${eventId}/seats`);
+        const res = await fetch(`/events/${eventId}/seats?userId=${currentUser}`);
         const data = await res.json();
+        layoutRows = data.layout || [];
         backendSeats = data.seats || [];
-        if (data.metrics) {
-          metrics = data.metrics;
-        }
+        totalCapacity = data.totalSeats || 500;
+        if (data.metrics) metrics = data.metrics;
       } catch (err) {
-        console.error(err);
+        console.error('[SeatMap] Failed to fetch live seats:', err);
       }
+
+      // Update Title and Subtitle with Auditorium Information
+      const titleEl = document.getElementById('stadium-capacity-title');
+      const subtitleEl = document.getElementById('stadium-capacity-subtitle');
+      if (titleEl) titleEl.textContent = `${currentEvent ? currentEvent.title : 'Concert Hall'} • Auditorium Seating`;
+      if (subtitleEl) subtitleEl.textContent = `All eyes towards Stage/Screen • ${totalCapacity.toLocaleString()} Total Capacity`;
 
       // Update Live Stats Badges
-      document.getElementById('sm-stat-available').textContent = `Available: ${metrics.available.toLocaleString()}`;
-      document.getElementById('sm-stat-held').textContent = `🔒 On Hold (5 min): ${metrics.held}`;
-      document.getElementById('sm-stat-sold').textContent = `Sold: ${metrics.sold}`;
+      const statAvail = document.getElementById('sm-stat-available');
+      const statHeld = document.getElementById('sm-stat-held');
+      const statSold = document.getElementById('sm-stat-sold');
+      if (statAvail) statAvail.textContent = `Available: ${metrics.available.toLocaleString()}`;
+      if (statHeld) statHeld.textContent = `🔒 On Hold: ${metrics.held}`;
+      if (statSold) statSold.textContent = `Sold: ${metrics.sold}`;
 
-      // Build Set of HELD and SOLD seat labels
-      const heldLabels = new Set(backendSeats.filter(s => s.status === 'HELD').map(s => s.label));
-      const soldLabels = new Set(backendSeats.filter(s => s.status === 'SOLD').map(s => s.label));
+      // Set container adaptive sizing class so all seats fit in one screen without sliding
+      container.className = `bms-auditorium auditorium-${totalCapacity}`;
 
-      // 4. Generate SVG 360° Circular Stadium Map
-      const centerX = 380;
-      const centerY = 380;
-
-      // Circular rings configuration
-      const rings = [
-        { r: 105, count: 16, tierName: 'VIP Inner Circle', prefix: 'VIP' },
-        { r: 145, count: 20, tierName: 'VIP Outer Circle', prefix: 'VIP' },
-        { r: 190, count: 24, tierName: 'Lower Bowl Ring A', prefix: 'LB' },
-        { r: 235, count: 28, tierName: 'Lower Bowl Ring B', prefix: 'LB' },
-        { r: 280, count: 32, tierName: 'Club Level Circle', prefix: 'CL' },
-        { r: 325, count: 36, tierName: 'Upper Grandstand Rim', prefix: 'UG' }
-      ];
-
-      let svgHtml = `
-        <defs>
-          <radialGradient id="stageGrad" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#4f46e5" stop-opacity="0.9" />
-            <stop offset="70%" stop-color="#312e81" stop-opacity="0.8" />
-            <stop offset="100%" stop-color="#1e1b4b" stop-opacity="0.95" />
-          </radialGradient>
-          <filter id="glowFilter" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
-        </defs>
-
-        <!-- Outer Stadium Circular Rim -->
-        <circle cx="${centerX}" cy="${centerY}" r="365" fill="#0b0f19" stroke="#1e293b" stroke-width="2" />
-        <circle cx="${centerX}" cy="${centerY}" r="350" fill="none" stroke="#161f30" stroke-width="1.5" stroke-dasharray="4 4" />
-
-        <!-- Compass Direction Markers -->
-        <text x="${centerX}" y="22" fill="#64748b" font-size="11" font-weight="800" text-anchor="middle" letter-spacing="0.1em">▲ NORTH (MAIN ENTRANCE)</text>
-        <text x="740" y="${centerY + 4}" fill="#64748b" font-size="11" font-weight="800" text-anchor="end" letter-spacing="0.1em">EAST GATE ▶</text>
-        <text x="${centerX}" y="750" fill="#64748b" font-size="11" font-weight="800" text-anchor="middle" letter-spacing="0.1em">▼ SOUTH PLAZA</text>
-        <text x="20" y="${centerY + 4}" fill="#64748b" font-size="11" font-weight="800" text-anchor="start" letter-spacing="0.1em">◀ WEST GATE</text>
-
-        <!-- Concentric Ring Visual Guide Lines -->
-        ${rings.map(ring => `<circle cx="${centerX}" cy="${centerY}" r="${ring.r}" fill="none" stroke="#1e293b" stroke-width="1" stroke-dasharray="3 3" opacity="0.6" />`).join('')}
-
-        <!-- Center 360° Circular Stage -->
-        <g id="center-stage-group">
-          <!-- Light Beams -->
-          <circle cx="${centerX}" cy="${centerY}" r="75" fill="none" stroke="#6366f1" stroke-width="2" opacity="0.4" stroke-dasharray="8 6" />
-          <circle cx="${centerX}" cy="${centerY}" r="65" fill="url(#stageGrad)" stroke="#818cf8" stroke-width="3" filter="url(#glowFilter)" />
-          <!-- Inner Podium -->
-          <circle cx="${centerX}" cy="${centerY}" r="40" fill="#1e1b4b" stroke="#a5b4fc" stroke-width="1.5" />
-          <text x="${centerX}" y="${centerY - 4}" fill="#fff" font-size="11" font-weight="800" text-anchor="middle" letter-spacing="0.08em">STAGE</text>
-          <text x="${centerX}" y="${centerY + 12}" fill="#34d399" font-size="9" font-weight="700" text-anchor="middle" letter-spacing="0.12em">360° LIVE</text>
-        </g>
-      `;
-
-      // 5. Place Circular Seats along Concentric Circles
-      let seatIdx = 0;
-      rings.forEach((ring, ringIdx) => {
-        const angleStep = (2 * Math.PI) / ring.count;
-        for (let i = 0; i < ring.count; i++) {
-          const angle = i * angleStep - Math.PI / 2; // start from top (North)
-          const x = centerX + ring.r * Math.cos(angle);
-          const y = centerY + ring.r * Math.sin(angle);
-
-          const seatNum = (i + 1).toString().padStart(2, '0');
-          const seatLabel = `${ring.prefix}-R${ringIdx + 1}-${seatNum}`;
-          const seatId = `seat_${eventId}_${seatLabel}`;
-
-          // Determine status STRICTLY by this event's database state (no index bleed)
-          let status = 'available';
-          if (heldLabels.has(seatLabel)) {
-            status = 'held';
-          } else if (soldLabels.has(seatLabel)) {
-            status = 'sold';
-          }
-
-          const isSelected = selectedSeats.includes(seatLabel);
-          const statusClass = isSelected ? 'selected' : status;
-
-          svgHtml += `
-            <circle 
-              cx="${x.toFixed(1)}" 
-              cy="${y.toFixed(1)}" 
-              r="8" 
-              class="seat-circle ${statusClass}" 
-              data-seat-id="${seatId}" 
-              data-seat-label="${seatLabel}" 
-              data-status="${status}" 
-              data-tier="${ring.tierName}"
-              onclick="onCircularSeatClick(this, '${seatLabel}', '${status}')"
-            >
-              <title>Seat ${seatLabel} • ${ring.tierName} • ${status.toUpperCase()} ${status === 'held' ? '(5-min hold)' : ''}</title>
-            </circle>
-          `;
-        }
+      // Build seat status map
+      const seatDataMap = new Map();
+      backendSeats.forEach(s => {
+        seatDataMap.set(s.label, s);
       });
 
-      svg.innerHTML = svgHtml;
+      // Group layout rows into tiers (VIP RECLINERS, PRIME PLATINUM, GOLD EXECUTIVE, SILVER CLUB)
+      const tiers = [];
+      const tierMap = new Map();
+      layoutRows.forEach(r => {
+        if (!tierMap.has(r.tierName)) {
+          const tObj = {
+            name: r.tierName,
+            priceFactor: r.priceFactor || 1.0,
+            color: r.color || '#34d399',
+            rows: []
+          };
+          tierMap.set(r.tierName, tObj);
+          tiers.push(tObj);
+        }
+        tierMap.get(r.tierName).rows.push(r);
+      });
+
+      let auditoriumHtml = '';
+      const now = Date.now();
+
+      tiers.forEach(tier => {
+        const tierPrice = Math.round(basePrice * tier.priceFactor);
+
+        auditoriumHtml += `
+          <div class="bms-tier-section">
+            <div class="bms-tier-header">
+              <div class="bms-tier-badge" style="--tier-accent: ${tier.color};">
+                <span class="bms-tier-name" style="color: ${tier.color};">${tier.name}</span>
+                <span class="bms-tier-price">₹${tierPrice.toLocaleString('en-IN')}</span>
+              </div>
+              <div class="bms-tier-divider"></div>
+            </div>
+            <div class="bms-tier-rows">
+        `;
+
+        tier.rows.forEach(r => {
+          auditoriumHtml += `
+            <div class="bms-row">
+              <div class="bms-row-label">${r.row}</div>
+              <div class="bms-seat-block bms-seat-block-left">
+          `;
+
+          // Left block of seats
+          for (let i = 1; i <= r.aisleAfter; i++) {
+            const seatNum = i;
+            const primaryLabel = `${r.row}-${seatNum.toString().padStart(2, '0')}`;
+            const sData = seatDataMap.get(primaryLabel);
+
+            let status = 'available';
+            if (sData) {
+              if (sData.status === 'SOLD') {
+                status = 'sold';
+              } else if (sData.status === 'HELD' && sData.current_reservation_id) {
+                status = 'held';
+              } else if (sData.temporary_hold_until && new Date(sData.temporary_hold_until).getTime() > now) {
+                if (sData.temporary_hold_user_id === currentUser) {
+                  status = 'selected';
+                  if (!selectedSeats.includes(primaryLabel)) {
+                    selectedSeats.push(primaryLabel);
+                    selectedSeatMap.set(primaryLabel, { label: primaryLabel, row: r.row, num: seatNum, price: tierPrice, tierName: tier.name });
+                  }
+                } else {
+                  status = 'held';
+                }
+              }
+            }
+
+            if (selectedSeats.includes(primaryLabel)) {
+              status = 'selected';
+            }
+
+            const seatId = `seat_${eventId}_${primaryLabel}`;
+
+            auditoriumHtml += `
+              <button 
+                type="button"
+                class="bms-seat ${status}" 
+                data-seat-id="${seatId}" 
+                data-seat-label="${primaryLabel}" 
+                data-status="${status}" 
+                data-row="${r.row}" 
+                data-num="${seatNum}" 
+                data-price="${tierPrice}"
+                data-tier="${tier.name}"
+                onclick="onSeatClick(this, '${primaryLabel}', '${status}', ${tierPrice}, '${tier.name}', '${r.row}', '${seatNum}')"
+                title="Row ${r.row}, Seat ${seatNum} • ${tier.name} • ₹${tierPrice.toLocaleString('en-IN')} • ${status.toUpperCase()} ${status === 'held' ? '(2-min hold)' : ''}"
+              >
+                ${seatNum}
+              </button>
+            `;
+          }
+
+          auditoriumHtml += `
+              </div>
+              <div class="bms-aisle">
+                <div class="bms-aisle-line"></div>
+              </div>
+              <div class="bms-seat-block bms-seat-block-right">
+          `;
+
+          // Right block of seats
+          for (let i = r.aisleAfter + 1; i <= r.count; i++) {
+            const seatNum = i;
+            const primaryLabel = `${r.row}-${seatNum.toString().padStart(2, '0')}`;
+            const sData = seatDataMap.get(primaryLabel);
+
+            let status = 'available';
+            if (sData) {
+              if (sData.status === 'SOLD') {
+                status = 'sold';
+              } else if (sData.status === 'HELD' && sData.current_reservation_id) {
+                status = 'held';
+              } else if (sData.temporary_hold_until && new Date(sData.temporary_hold_until).getTime() > now) {
+                if (sData.temporary_hold_user_id === currentUser) {
+                  status = 'selected';
+                  if (!selectedSeats.includes(primaryLabel)) {
+                    selectedSeats.push(primaryLabel);
+                    selectedSeatMap.set(primaryLabel, { label: primaryLabel, row: r.row, num: seatNum, price: tierPrice, tierName: tier.name });
+                  }
+                } else {
+                  status = 'held';
+                }
+              }
+            }
+
+            if (selectedSeats.includes(primaryLabel)) {
+              status = 'selected';
+            }
+
+            const seatId = `seat_${eventId}_${primaryLabel}`;
+
+            auditoriumHtml += `
+              <button 
+                type="button"
+                class="bms-seat ${status}" 
+                data-seat-id="${seatId}" 
+                data-seat-label="${primaryLabel}" 
+                data-status="${status}" 
+                data-row="${r.row}" 
+                data-num="${seatNum}" 
+                data-price="${tierPrice}"
+                data-tier="${tier.name}"
+                onclick="onSeatClick(this, '${primaryLabel}', '${status}', ${tierPrice}, '${tier.name}', '${r.row}', '${seatNum}')"
+                title="Row ${r.row}, Seat ${seatNum} • ${tier.name} • ₹${tierPrice.toLocaleString('en-IN')} • ${status.toUpperCase()} ${status === 'held' ? '(2-min hold)' : ''}"
+              >
+                ${seatNum}
+              </button>
+            `;
+          }
+
+          auditoriumHtml += `
+              </div>
+              <div class="bms-row-label">${r.row}</div>
+            </div>
+          `;
+        });
+
+        auditoriumHtml += `
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = auditoriumHtml;
+
+      // Connect Real-Time WebSocket for Zero-Latency Multi-User Hold Sync
+      connectSeatMapWebSocket(eventId);
+
+      // Refresh bottom bar
+      updateSeatSelectionBar();
     }
 
-    // --- Interactive Seat Click Handler ---
-    function onCircularSeatClick(seatEl, label, status) {
-      if (status === 'held') {
-        return alert(`🔒 Seat ${label} is currently ON HOLD by another buyer completing checkout.
+    // --- Real-time WebSocket connection for Seat Selection Hold updates ---
+    function connectSeatMapWebSocket(eventId) {
+      connectQueueWebSocket(eventId, (msg) => {
+        if (msg.type === 'SEAT_SELECTION_UPDATED') {
+          const seatEl = document.querySelector(`[data-seat-label="${msg.label}"]`);
+          if (seatEl) {
+            if (msg.heldBy === currentUser) {
+              seatEl.className = 'bms-seat selected';
+              seatEl.dataset.status = 'selected';
+            } else {
+              seatEl.className = 'bms-seat held';
+              seatEl.dataset.status = 'held';
+              seatEl.title = `Seat ${msg.label} • ON HOLD (2-min hold)`;
+            }
+          }
+        } else if (msg.type === 'SEAT_SELECTION_RELEASED') {
+          const seatEl = document.querySelector(`[data-seat-label="${msg.label}"]`);
+          if (seatEl) {
+            const isSel = selectedSeats.includes(msg.label);
+            if (!isSel) {
+              seatEl.className = 'bms-seat available';
+              seatEl.dataset.status = 'available';
+              seatEl.title = `Seat ${msg.label} • Available`;
+            }
+          }
+        } else if (msg.type === 'SEAT_STATUS_UPDATED') {
+          const seatEl = document.querySelector(`[data-seat-label="${msg.label}"]`);
+          if (seatEl) {
+            const newSt = (msg.status || '').toLowerCase();
+            seatEl.className = `bms-seat ${newSt}`;
+            seatEl.dataset.status = newSt;
+          }
+        }
+      });
+    }
 
-Held seats are reserved for 5 minutes. If their payment is not completed, this seat will be automatically released back to available inventory.`);
+    // --- Interactive Seat Click Handler (BookMyShow with 2-Minute Selection Hold) ---
+    async function onSeatClick(seatEl, label, status, price, tierName, row, num) {
+      const currentStatus = seatEl.dataset.status || status;
+
+      if (currentStatus === 'held') {
+        return alert(`🔒 Seat ${label} is currently ON TEMPORARY HOLD by another user.\n\nIf they do not proceed to payment within 2-3 minutes, this seat will automatically revert to Available.`);
       }
-      if (status === 'sold') {
+      if (currentStatus === 'sold') {
         return alert(`❌ Seat ${label} is already SOLD and confirmed.`);
       }
 
       const idx = selectedSeats.indexOf(label);
       if (idx > -1) {
+        // Deselect seat -> release temporary hold on backend
+        try {
+          await fetch(`/events/${currentEvent.eventId}/seats/temp-release`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ label, userId: currentUser })
+          });
+        } catch (e) {
+          console.error('[SeatMap] Temp-release error:', e);
+        }
+
         selectedSeats.splice(idx, 1);
+        selectedSeatMap.delete(label);
         seatEl.classList.remove('selected');
         seatEl.classList.add('available');
+        seatEl.dataset.status = 'available';
+
+        if (selectedSeats.length === 0) {
+          stopSelectionTimer();
+        }
       } else {
         if (selectedSeats.length >= 6) {
           return alert('Maximum 6 seats allowed per booking transaction.');
         }
+
+        // Select seat -> claim temporary 2-minute hold on backend
+        try {
+          const res = await fetch(`/events/${currentEvent.eventId}/seats/temp-hold`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ label, userId: currentUser })
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            return alert(data.message || 'Seat is no longer available.');
+          }
+        } catch (err) {
+          return alert('Failed to hold seat: ' + err.message);
+        }
+
         selectedSeats.push(label);
+        selectedSeatMap.set(label, {
+          label,
+          row: row || label.split('-')[0],
+          num: num || label.split('-')[1],
+          price: price || (currentEvent ? currentEvent.priceMinor / 100 : 2500.0),
+          tierName: tierName || 'Reserved'
+        });
         seatEl.classList.remove('available');
         seatEl.classList.add('selected');
+        seatEl.dataset.status = 'selected';
+
+        startSelectionTimer();
       }
       updateSeatSelectionBar();
     }
 
-    // --- Quick Pick Seats (Auto-selects inner available seats) ---
-    function quickSelectCircularSeats(count) {
-      clearSelectedSeats();
-      const availableNodes = Array.from(document.querySelectorAll('.seat-circle.available'));
+    // --- Selection Hold Timer (2-Minute auto-expiry) ---
+    function startSelectionTimer() {
+      if (selectionHoldTimer) clearInterval(selectionHoldTimer);
+      selectionHoldRemaining = 120; // 2 minutes
+
+      const timerBadge = document.getElementById('sm-stat-timer');
+      if (timerBadge) {
+        timerBadge.style.display = 'inline-flex';
+        timerBadge.textContent = '⏱️ Selection Hold: 02:00';
+      }
+
+      selectionHoldTimer = setInterval(async () => {
+        selectionHoldRemaining--;
+        const mins = Math.floor(selectionHoldRemaining / 60).toString().padStart(2, '0');
+        const secs = (selectionHoldRemaining % 60).toString().padStart(2, '0');
+
+        if (timerBadge) {
+          timerBadge.textContent = `⏱️ Selection Hold: ${mins}:${secs}`;
+          if (selectionHoldRemaining <= 30) {
+            timerBadge.style.borderColor = 'var(--rose)';
+            timerBadge.style.color = '#fca5a5';
+          } else {
+            timerBadge.style.borderColor = 'var(--emerald)';
+            timerBadge.style.color = '#34d399';
+          }
+        }
+
+        if (selectionHoldRemaining <= 0) {
+          clearInterval(selectionHoldTimer);
+          selectionHoldTimer = null;
+          if (timerBadge) timerBadge.style.display = 'none';
+
+          // Release all held seats on backend
+          for (const lbl of [...selectedSeats]) {
+            try {
+              await fetch(`/events/${currentEvent.eventId}/seats/temp-release`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ label: lbl, userId: currentUser })
+              });
+            } catch (e) {}
+          }
+
+          selectedSeats = [];
+          selectedSeatMap.clear();
+          updateSeatSelectionBar();
+
+          alert('⏱️ Your 2-minute seat selection hold has expired. The seats have been returned to available inventory.');
+          if (currentEvent) {
+            renderBookMyShowSeatMap(currentEvent.eventId);
+          }
+        }
+      }, 1000);
+    }
+
+    function stopSelectionTimer() {
+      if (selectionHoldTimer) {
+        clearInterval(selectionHoldTimer);
+        selectionHoldTimer = null;
+      }
+      const timerBadge = document.getElementById('sm-stat-timer');
+      if (timerBadge) timerBadge.style.display = 'none';
+    }
+
+    // --- Quick Pick Tickets ---
+    async function quickSelectSeats(count) {
+      await clearSelectedSeats();
+      const availableNodes = Array.from(document.querySelectorAll('.bms-seat.available'));
       const toSelect = availableNodes.slice(0, count);
 
-      toSelect.forEach(el => {
+      for (const el of toSelect) {
         const lbl = el.dataset.seatLabel;
+        const price = parseFloat(el.dataset.price) || (currentEvent ? currentEvent.priceMinor / 100 : 2500.0);
+        const tierName = el.dataset.tier || 'Reserved';
+        const row = el.dataset.row || '';
+        const num = el.dataset.num || '';
         if (lbl) {
-          selectedSeats.push(lbl);
-          el.classList.remove('available');
-          el.classList.add('selected');
+          try {
+            const res = await fetch(`/events/${currentEvent.eventId}/seats/temp-hold`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ label: lbl, userId: currentUser })
+            });
+            if (res.ok) {
+              selectedSeats.push(lbl);
+              selectedSeatMap.set(lbl, { label: lbl, row, num, price, tierName });
+              el.classList.remove('available');
+              el.classList.add('selected');
+              el.dataset.status = 'selected';
+            }
+          } catch (e) {
+            console.error(e);
+          }
         }
-      });
+      }
+
+      if (selectedSeats.length > 0) {
+        startSelectionTimer();
+      }
       updateSeatSelectionBar();
     }
 
-    function clearSelectedSeats() {
+    async function clearSelectedSeats() {
+      stopSelectionTimer();
+      for (const lbl of [...selectedSeats]) {
+        try {
+          if (currentEvent) {
+            await fetch(`/events/${currentEvent.eventId}/seats/temp-release`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ label: lbl, userId: currentUser })
+            });
+          }
+        } catch (e) {}
+      }
+
       selectedSeats = [];
-      document.querySelectorAll('.seat-circle.selected').forEach(el => {
+      selectedSeatMap.clear();
+      document.querySelectorAll('.bms-seat.selected').forEach(el => {
         el.classList.remove('selected');
         el.classList.add('available');
+        el.dataset.status = 'available';
       });
       updateSeatSelectionBar();
     }
 
+    // --- Sticky Selection Bottom Bar ---
     function updateSeatSelectionBar() {
       const barSeats = document.getElementById('bar-selected-seats');
       const barPrice = document.getElementById('bar-total-price');
       const proceedBtn = document.getElementById('btn-proceed-booking');
 
+      if (!barSeats || !barPrice || !proceedBtn) return;
+
       if (selectedSeats.length === 0) {
-        barSeats.textContent = 'None (Click circular seats or use Quick Pick above)';
-        barPrice.textContent = '$0.00';
+        barSeats.textContent = 'None';
+        barPrice.textContent = '₹0.00';
         proceedBtn.disabled = true;
-        proceedBtn.textContent = '🔒 Hold Selected Seats & Proceed to Pay (5-Min Lock) →';
+        proceedBtn.textContent = 'Book Now →';
       } else {
         barSeats.textContent = `${selectedSeats.join(', ')} (${selectedSeats.length} Seat${selectedSeats.length > 1 ? 's' : ''})`;
-        const unitPrice = currentEvent ? (currentEvent.priceMinor / 100) : 150.0;
-        const total = (selectedSeats.length * unitPrice).toFixed(2);
-        barPrice.textContent = `$${total}`;
+        
+        let total = 0;
+        selectedSeats.forEach(lbl => {
+          const detail = selectedSeatMap.get(lbl);
+          if (detail && detail.price) {
+            total += detail.price;
+          } else {
+            total += currentEvent ? (currentEvent.priceMinor / 100) : 2500.0;
+          }
+        });
+
+        barPrice.textContent = `₹${Math.round(total).toLocaleString('en-IN')}`;
         proceedBtn.disabled = false;
-        proceedBtn.textContent = `🔒 Hold ${selectedSeats.length} Seat${selectedSeats.length > 1 ? 's' : ''} & Pay ($${total}) → (5-Min Lock)`;
+        proceedBtn.textContent = `Book Now (${selectedSeats.length}) →`;
       }
     }
+
+    // Backward-compatibility aliases
+    const buildCircularSeatMap = renderBookMyShowSeatMap;
+    const quickSelectCircularSeats = quickSelectSeats;
+    const onCircularSeatClick = onSeatClick;
 
     // --- WebSocket Manager for Real-Time Zero Latency Updates ---
     let queueWs = null;
@@ -1762,6 +2296,8 @@ Held seats are reserved for 5 minutes. If their payment is not completed, this s
     async function proceedToQueue() {
       if (selectedSeats.length === 0) return alert('Please select at least 1 seat.');
 
+      stopSelectionTimer();
+
       goToView('queue-wait');
       document.getElementById('queue-position-display').textContent = 'Joining...';
       document.getElementById('queue-ahead-count').textContent = '...';
@@ -1850,7 +2386,9 @@ Held seats are reserved for 5 minutes. If their payment is not completed, this s
     function openPaymentPage(data) {
       if (pollTimer) clearTimeout(pollTimer);
 
-      document.getElementById('assigned-gateway-pill').textContent = '🔒 Checkout Session Ready';
+      const pill = document.getElementById('assigned-gateway-pill');
+      if (pill) pill.textContent = '🔒 Checkout Session Ready';
+
       document.getElementById('pay-summary-title').textContent = currentEvent.title;
       document.getElementById('pay-summary-venue').textContent = currentEvent.venue;
       
@@ -1858,10 +2396,22 @@ Held seats are reserved for 5 minutes. If their payment is not completed, this s
       document.getElementById('pay-summary-seats').textContent = seatsStr;
       document.getElementById('pay-held-seats-badge').textContent = seatsStr;
 
-      const subtotal = (selectedSeats.length > 0 ? selectedSeats.length : 1) * (currentEvent.priceMinor / 100);
-      document.getElementById('pay-summary-subtotal').textContent = `$${subtotal.toFixed(2)}`;
-      document.getElementById('pay-summary-total').textContent = `$${(subtotal + 5.0).toFixed(2)}`;
-      document.getElementById('btn-pay-now').textContent = `Pay $${(subtotal + 5.0).toFixed(2)} & Confirm Booking`;
+      let subtotal = 0;
+      if (selectedSeats.length > 0) {
+        selectedSeats.forEach(lbl => {
+          const det = selectedSeatMap.get(lbl);
+          subtotal += det?.price ? det.price : (currentEvent ? currentEvent.priceMinor / 100 : 2500.0);
+        });
+      } else {
+        subtotal = (currentEvent ? currentEvent.priceMinor / 100 : 2500.0);
+      }
+
+      const fee = 40.0;
+      const totalPayable = subtotal + fee;
+
+      document.getElementById('pay-summary-subtotal').textContent = `₹${Math.round(subtotal).toLocaleString('en-IN')}`;
+      document.getElementById('pay-summary-total').textContent = `₹${Math.round(totalPayable).toLocaleString('en-IN')}`;
+      document.getElementById('btn-pay-now').textContent = `Pay ₹${Math.round(totalPayable).toLocaleString('en-IN')} & Confirm Booking`;
 
       // Start 5-Minute Hold Countdown (300 seconds)
       let initialSeconds = 300;
@@ -1886,7 +2436,7 @@ Held seats are reserved for 5 minutes. If their payment is not completed, this s
         if (holdSecondsRemaining <= 0) {
           clearInterval(holdTimer);
           holdTimer = null;
-          alert('⏱️ Your 5-minute seat hold has expired! The held seats have been released back to the circular arena.');
+          alert('⏱️ Your 5-minute seat hold has expired! The held seats have been released back to available arena inventory.');
           cancelHoldAndReturn();
         }
       }, 1000);
@@ -1921,6 +2471,7 @@ Held seats are reserved for 5 minutes. If their payment is not completed, this s
       }
 
       selectedSeats = [];
+      selectedSeatMap.clear();
       updateSeatSelectionBar();
       goToView('seatmap');
     }
@@ -1959,7 +2510,7 @@ Held seats are reserved for 5 minutes. If their payment is not completed, this s
           const statusData = await statusRes.json();
           openConfirmationPass(statusData);
         } else {
-          alert('❌ Payment was declined as selected. Held seats have been released back to available arena inventory.');
+          alert('❌ Payment was declined as simulated. Held seats have been released back to available inventory.');
           goToView('events');
         }
       } catch (err) {
@@ -1973,13 +2524,14 @@ Held seats are reserved for 5 minutes. If their payment is not completed, this s
     function openConfirmationPass(data) {
       document.getElementById('conf-event-title').textContent = currentEvent.title;
       document.getElementById('conf-event-venue').textContent = currentEvent.venue;
-      document.getElementById('conf-seat-label').textContent = selectedSeats.join(', ') || data.booking?.seatLabel || 'VIP-R1-01';
+      document.getElementById('conf-seat-label').textContent = selectedSeats.join(', ') || data.booking?.seatLabel || 'A-01';
       document.getElementById('conf-user-id').textContent = currentUser;
       document.getElementById('conf-booking-id').textContent = data.booking?.bookingId || `book_${Date.now()}`;
       document.getElementById('conf-payment-id').textContent = `pay_tx_${Date.now().toString(36)}`;
 
       // Clear selected seats so next event starts with a clean slate
       selectedSeats = [];
+      selectedSeatMap.clear();
       updateSeatSelectionBar();
 
       goToView('confirmation');
@@ -2024,7 +2576,7 @@ Held seats are reserved for 5 minutes. If their payment is not completed, this s
                 <td style="padding: 12px;"><code style="color: var(--cyan);">${b.booking_id.substring(0, 16)}...</code></td>
                 <td style="padding: 12px;"><strong style="color: #fff;">${b.event_title}</strong></td>
                 <td style="padding: 12px;"><strong style="color: #34d399;">${b.seat_label}</strong></td>
-                <td style="padding: 12px; font-family: 'JetBrains Mono', monospace;">$${((b.amount_minor || 15000) / 100).toFixed(2)}</td>
+                <td style="padding: 12px; font-family: 'JetBrains Mono', monospace;">₹${((b.amount_minor || 250000) / 100).toLocaleString('en-IN')}</td>
                 <td style="padding: 12px;">${new Date(b.confirmed_at).toLocaleDateString()}</td>
               </tr>
             `;
@@ -2045,6 +2597,7 @@ Held seats are reserved for 5 minutes. If their payment is not completed, this s
       document.getElementById('header-user-tag').textContent = `User: ${currentUser}`;
       loadProfileData();
     }
+
   </script>
 </body>
 </html>

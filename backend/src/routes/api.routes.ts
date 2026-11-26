@@ -12,7 +12,7 @@ import { ResultHandler } from '../services/result-handler.js';
 import { simulator, PaymentResult } from '../services/payment-simulator.js';
 import { getDb } from '../db/connection.js';
 import { CONFIG } from '../config.js';
-import { seedInitialData } from '../db/migrator.js';
+import { seedInitialData, generateEventAuditoriumConfig } from '../db/migrator.js';
 
 export function registerRoutes(
   app: FastifyInstance,
@@ -115,46 +115,148 @@ export function registerRoutes(
   // --- 2. Seat Map & Queue Routes ---
   app.get('/events/:id/seats', async (req, reply) => {
     const { id: eventId } = req.params as { id: string };
+    const query = (req.query as any) || {};
+    const userId = (req.headers['x-user-id'] as string) || query.userId || 'usr_00001';
     const db = await getDb();
     
+    // Auto-release expired temporary selection holds first
+    await db.query(
+      `UPDATE seats 
+       SET temporary_hold_user_id = NULL, temporary_hold_until = NULL 
+       WHERE temporary_hold_until <= NOW() AND temporary_hold_until IS NOT NULL`
+    );
+
     // Order HELD first, then SOLD, then AVAILABLE so held seats are immediately surfaced
     const res = await db.query(
-      `SELECT seat_id, label, status, current_reservation_id 
+      `SELECT seat_id, label, 
+         CASE 
+           WHEN status = 'SOLD' THEN 'SOLD'
+           WHEN status = 'HELD' AND current_reservation_id IS NOT NULL THEN 'HELD'
+           WHEN temporary_hold_until > NOW() THEN 'HELD'
+           ELSE 'AVAILABLE'
+         END as status,
+         temporary_hold_user_id,
+         temporary_hold_until,
+         current_reservation_id 
        FROM seats 
        WHERE event_id = $1 
-       ORDER BY 
-         CASE status 
-           WHEN 'HELD' THEN 1 
-           WHEN 'SOLD' THEN 2 
-           ELSE 3 
-         END, 
-         label ASC 
-       LIMIT 300`,
+       ORDER BY label ASC 
+       LIMIT 1500`,
       [eventId]
     );
 
     const counts = await db.query(
       `SELECT 
          COUNT(*) as total_seats,
-         COUNT(*) FILTER (WHERE status = 'AVAILABLE') as available_seats,
-         COUNT(*) FILTER (WHERE status = 'HELD') as held_seats,
+         COUNT(*) FILTER (
+           WHERE status = 'AVAILABLE' 
+             AND (temporary_hold_until IS NULL OR temporary_hold_until <= NOW())
+         ) as available_seats,
+         COUNT(*) FILTER (
+           WHERE (status = 'HELD' AND current_reservation_id IS NOT NULL) 
+              OR (temporary_hold_until > NOW())
+         ) as held_seats,
          COUNT(*) FILTER (WHERE status = 'SOLD') as sold_seats
        FROM seats WHERE event_id = $1`,
       [eventId]
     );
 
     const c = counts.rows[0];
+    const totalCount = parseInt(c.total_seats || '0', 10);
+    const layout = generateEventAuditoriumConfig(eventId, totalCount);
+
     return {
       eventId,
-      totalSeats: parseInt(c.total_seats || '0', 10),
+      totalSeats: totalCount,
       metrics: {
         available: parseInt(c.available_seats || '0', 10),
         held: parseInt(c.held_seats || '0', 10),
         sold: parseInt(c.sold_seats || '0', 10),
       },
-      holdDurationSeconds: 300,
+      holdDurationSeconds: 120, // 2 minutes selection hold
+      layout,
       seats: res.rows
     };
+  });
+
+  // Temporary selection hold endpoint (2-minute limit while choosing seats)
+  app.post('/events/:id/seats/temp-hold', async (req, reply) => {
+    const { id: eventId } = req.params as { id: string };
+    const { label, userId } = req.body as { label: string; userId: string };
+    const db = await getDb();
+
+    const seatRes = await db.query(
+      `SELECT seat_id, status, temporary_hold_user_id, temporary_hold_until, current_reservation_id 
+       FROM seats 
+       WHERE event_id = $1 AND label = $2`,
+      [eventId, label]
+    );
+
+    if (seatRes.rows.length === 0) {
+      return reply.code(404).send({ error: 'Seat not found' });
+    }
+
+    const seat = seatRes.rows[0];
+    const now = new Date();
+    const isTempHeld = seat.temporary_hold_until && new Date(seat.temporary_hold_until) > now;
+
+    if (seat.status === 'SOLD') {
+      return reply.code(409).send({ error: 'SEAT_SOLD', message: `Seat ${label} is already SOLD.` });
+    }
+    if (seat.status === 'HELD' && seat.current_reservation_id) {
+      return reply.code(409).send({ error: 'SEAT_IN_CHECKOUT', message: `Seat ${label} is currently in 5-minute checkout by another buyer.` });
+    }
+    if (isTempHeld && seat.temporary_hold_user_id && seat.temporary_hold_user_id !== userId) {
+      return reply.code(409).send({ 
+        error: 'SEAT_HELD_BY_OTHER', 
+        message: `🔒 Seat ${label} is currently held by another buyer. If they do not proceed to payment within 2 minutes, it will be automatically released.` 
+      });
+    }
+
+    // Set 2-minute temporary selection hold (120 seconds)
+    const expiresAt = new Date(Date.now() + 120 * 1000);
+    await db.query(
+      `UPDATE seats 
+       SET temporary_hold_user_id = $1, temporary_hold_until = $2 
+       WHERE event_id = $3 AND label = $4`,
+      [userId, expiresAt.toISOString(), eventId, label]
+    );
+
+    // Broadcast in real-time to all other viewers of this concert
+    wsManager.broadcastToEvent(eventId, {
+      type: 'SEAT_SELECTION_UPDATED',
+      label,
+      heldBy: userId,
+      expiresAt: expiresAt.toISOString(),
+    });
+
+    return reply.code(200).send({ 
+      success: true, 
+      label, 
+      heldBy: userId, 
+      expiresAt: expiresAt.toISOString() 
+    });
+  });
+
+  // Release temporary selection hold
+  app.post('/events/:id/seats/temp-release', async (req, reply) => {
+    const { id: eventId } = req.params as { id: string };
+    const { label, userId } = req.body as { label: string; userId: string };
+    const db = await getDb();
+
+    await db.query(
+      `UPDATE seats 
+       SET temporary_hold_user_id = NULL, temporary_hold_until = NULL 
+       WHERE event_id = $1 AND label = $2 AND (temporary_hold_user_id = $3 OR $3 IS NULL)`,
+      [eventId, label, userId]
+    );
+
+    wsManager.broadcastToEvent(eventId, {
+      type: 'SEAT_SELECTION_RELEASED',
+      label,
+    });
+
+    return reply.code(200).send({ success: true, label });
   });
 
   app.post('/events/:id/queue/cancel', async (req, reply) => {
@@ -580,6 +682,27 @@ export function registerRoutes(
       return reply.code(500).send({ error: 'DROP_FAILED', message: err.message });
     }
   });
+
+  // Periodic background cleanup of expired temporary selection holds (every 3 seconds)
+  setInterval(async () => {
+    try {
+      const db = await getDb();
+      const res = await db.query(
+        `UPDATE seats 
+         SET temporary_hold_user_id = NULL, temporary_hold_until = NULL 
+         WHERE temporary_hold_until <= NOW() AND temporary_hold_until IS NOT NULL
+         RETURNING event_id, label`
+      );
+      if (res.rows.length > 0) {
+        for (const row of res.rows) {
+          wsManager.broadcastToEvent(row.event_id, {
+            type: 'SEAT_SELECTION_RELEASED',
+            label: row.label,
+          });
+        }
+      }
+    } catch (e) {}
+  }, 3000);
 
   // Healthcheck endpoint
   app.get('/health', async () => {

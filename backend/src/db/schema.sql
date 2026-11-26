@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS events (
     event_time TIMESTAMP WITH TIME ZONE NOT NULL,
     total_seats INT NOT NULL,
     price_minor INT NOT NULL,
-    currency VARCHAR(3) NOT NULL DEFAULT 'USD',
+    currency VARCHAR(3) NOT NULL DEFAULT 'INR',
     sale_status VARCHAR(32) NOT NULL DEFAULT 'ACTIVE', -- 'ACTIVE', 'PAUSED', 'ENDED'
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -46,6 +46,8 @@ CREATE TABLE IF NOT EXISTS seats (
     label VARCHAR(64) NOT NULL,
     status VARCHAR(32) NOT NULL DEFAULT 'AVAILABLE', -- 'AVAILABLE', 'HELD', 'SOLD'
     current_reservation_id VARCHAR(64),
+    temporary_hold_user_id VARCHAR(64),
+    temporary_hold_until TIMESTAMP WITH TIME ZONE,
     version INT NOT NULL DEFAULT 0,
     CONSTRAINT uq_event_seat_label UNIQUE (event_id, label)
 );
@@ -97,7 +99,7 @@ CREATE TABLE IF NOT EXISTS payments (
     provider_reference VARCHAR(128) UNIQUE NOT NULL,
     idempotency_key VARCHAR(128) UNIQUE NOT NULL,
     amount_minor INT NOT NULL,
-    currency VARCHAR(3) NOT NULL DEFAULT 'USD',
+    currency VARCHAR(3) NOT NULL DEFAULT 'INR',
     status VARCHAR(32) NOT NULL DEFAULT 'PENDING', -- 'SUCCESS', 'FAILED', 'CANCELLED', 'PENDING'
     sampled_duration INT, -- in ms
     sampled_outcome VARCHAR(32),

@@ -1,20 +1,104 @@
-// Circular arena labels definition (156 seats)
-export function getCircularSeatLabels(): string[] {
-  const rings = [
-    { prefix: 'VIP', ring: 1, count: 16 },
-    { prefix: 'VIP', ring: 2, count: 20 },
-    { prefix: 'LB', ring: 3, count: 24 },
-    { prefix: 'LB', ring: 4, count: 28 },
-    { prefix: 'CL', ring: 5, count: 32 },
-    { prefix: 'UG', ring: 6, count: 36 },
+// BookMyShow-style auditorium tiers and labels definition
+export interface AuditoriumRowConfig {
+  row: string;
+  count: number;
+  aisleAfter: number;
+  tierName: string;
+  priceFactor: number;
+  color: string;
+}
+
+export function generateEventAuditoriumConfig(eventId: string, totalSeats: number): AuditoriumRowConfig[] {
+  const ROW_LETTERS = [
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q',
+    'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'BB', 'CC'
   ];
-  const labels: string[] = [];
-  rings.forEach((r) => {
-    for (let i = 1; i <= r.count; i++) {
-      labels.push(`${r.prefix}-R${r.ring}-${i.toString().padStart(2, '0')}`);
+
+  let rowCount = 20;
+  let seatsPerRow = 25;
+  let aisleAfter = 12;
+
+  if (totalSeats === 1000) {
+    rowCount = 25;
+    seatsPerRow = 40;
+    aisleAfter = 20;
+  } else if (totalSeats === 750) {
+    rowCount = 25;
+    seatsPerRow = 30;
+    aisleAfter = 15;
+  } else if (totalSeats === 500) {
+    rowCount = 20;
+    seatsPerRow = 25;
+    aisleAfter = 12;
+  } else if (totalSeats === 400) {
+    rowCount = 16;
+    seatsPerRow = 25;
+    aisleAfter = 12;
+  } else {
+    rowCount = Math.max(10, Math.floor(totalSeats / 25));
+    seatsPerRow = Math.ceil(totalSeats / rowCount);
+    aisleAfter = Math.floor(seatsPerRow / 2);
+  }
+
+  const rows: AuditoriumRowConfig[] = [];
+  let remainingSeats = totalSeats;
+
+  for (let rIdx = 0; rIdx < rowCount && remainingSeats > 0; rIdx++) {
+    const rowLetter = ROW_LETTERS[rIdx] || `R${rIdx + 1}`;
+    const thisRowCount = Math.min(seatsPerRow, remainingSeats);
+    const thisAisle = Math.min(aisleAfter, Math.floor(thisRowCount / 2));
+
+    let tierName = 'SILVER CLUB';
+    let priceFactor = 0.75;
+    let color = '#94a3b8';
+
+    const progress = rIdx / rowCount;
+    if (progress < 0.2) {
+      tierName = 'VIP RECLINERS';
+      priceFactor = 1.5;
+      color = '#fbbf24';
+    } else if (progress < 0.45) {
+      tierName = 'PRIME PLATINUM';
+      priceFactor = 1.25;
+      color = '#818cf8';
+    } else if (progress < 0.7) {
+      tierName = 'GOLD EXECUTIVE';
+      priceFactor = 1.0;
+      color = '#34d399';
     }
-  });
+
+    rows.push({
+      row: rowLetter,
+      count: thisRowCount,
+      aisleAfter: thisAisle,
+      tierName,
+      priceFactor,
+      color,
+    });
+    remainingSeats -= thisRowCount;
+  }
+
+  return rows;
+}
+
+export function getEventSeatLabels(eventId: string, totalSeats: number): string[] {
+  const rows = generateEventAuditoriumConfig(eventId, totalSeats);
+  const labels: string[] = [];
+  for (const r of rows) {
+    for (let i = 1; i <= r.count; i++) {
+      labels.push(`${r.row}-${i.toString().padStart(2, '0')}`);
+    }
+  }
   return labels;
+}
+
+export function getBookMyShowSeatLabels(): string[] {
+  return getEventSeatLabels('default', 500);
+}
+
+// Backward-compatible alias
+export function getCircularSeatLabels(): string[] {
+  return getBookMyShowSeatLabels();
 }
 
 import fs from 'fs';
@@ -48,6 +132,13 @@ export async function runMigrations(db?: IDatabase): Promise<void> {
       }
     }
   }
+
+  // Ensure columns for temporary real-time holds exist
+  try {
+    await database.query(`ALTER TABLE seats ADD COLUMN IF NOT EXISTS temporary_hold_user_id VARCHAR(64);`);
+    await database.query(`ALTER TABLE seats ADD COLUMN IF NOT EXISTS temporary_hold_until TIMESTAMP WITH TIME ZONE;`);
+  } catch (err: any) {}
+
   console.log('[Migration] Schema migration completed successfully.');
 }
 
@@ -56,7 +147,6 @@ export async function seedInitialData(
   options?: { seatCount?: number; gatewayCount?: number; userCount?: number }
 ): Promise<void> {
   const database = db || (await getDb());
-  const seatCount = options?.seatCount ?? CONFIG.TOTAL_SEATS;
   const gatewayCount = options?.gatewayCount ?? CONFIG.DEFAULT_GATEWAY_COUNT;
   const userCount = options?.userCount ?? 500;
 
@@ -64,37 +154,43 @@ export async function seedInitialData(
     {
       id: CONFIG.DEFAULT_EVENT_ID,
       title: 'Global Rock Fest 2026',
-      venue: 'National Arena, New York',
-      totalSeats: seatCount,
-      priceMinor: 15000,
+      venue: 'DY Patil Stadium, Mumbai',
+      totalSeats: 500,
+      priceMinor: 250000, // ₹2,500.00
+      currency: 'INR',
       gateways: gatewayCount,
       daysOffset: 30,
+      saleStatus: 'ACTIVE',
     },
     {
       id: 'evt_coldplay_2026',
       title: 'Coldplay: Music of the Spheres Tour',
-      venue: 'Wembley Stadium, London',
-      totalSeats: Math.min(seatCount, 2500),
-      priceMinor: 12500,
+      venue: 'Narendra Modi Stadium, Ahmedabad',
+      totalSeats: 750,
+      priceMinor: 450000, // ₹4,500.00
+      currency: 'INR',
       gateways: 4,
       daysOffset: 45,
+      saleStatus: 'ACTIVE',
     },
     {
       id: 'evt_taylor_2026',
       title: 'Taylor Swift: The Eras Tour (Encore)',
-      venue: 'SoFi Stadium, Los Angeles',
-      totalSeats: Math.min(seatCount, 3000),
-      priceMinor: 22000,
+      venue: 'Jawaharlal Nehru Stadium, Delhi',
+      totalSeats: 1000,
+      priceMinor: 750000, // ₹7,500.00
+      currency: 'INR',
       gateways: 5,
       daysOffset: 60,
-      saleStatus: 'UPCOMING',
+      saleStatus: 'ACTIVE',
     },
     {
       id: 'evt_electronic_2026',
       title: 'Neon Horizon Electronic Odyssey',
-      venue: 'Bayfront Park, Miami',
-      totalSeats: Math.min(seatCount, 1500),
-      priceMinor: 8500,
+      venue: 'Sunburn Arena, Goa',
+      totalSeats: 400,
+      priceMinor: 180000, // ₹1,800.00
+      currency: 'INR',
       gateways: 3,
       daysOffset: 15,
       saleStatus: 'ACTIVE',
@@ -106,15 +202,18 @@ export async function seedInitialData(
   await database.withTransaction(async (client) => {
     for (const evt of eventsToSeed) {
       const status = (evt as any).saleStatus || 'ACTIVE';
-      // 1. Seed or update event
+      // 1. Seed or update event with INR
       await client.query(
         `INSERT INTO events (event_id, title, venue, event_time, total_seats, price_minor, currency, sale_status)
-         VALUES ($1, $2, $3, NOW() + ($4 || ' days')::INTERVAL, $5, $6, 'USD', $7)
+         VALUES ($1, $2, $3, NOW() + ($4 || ' days')::INTERVAL, $5, $6, $7, $8)
          ON CONFLICT (event_id) DO UPDATE SET
+           title = EXCLUDED.title,
+           venue = EXCLUDED.venue,
            total_seats = EXCLUDED.total_seats,
            price_minor = EXCLUDED.price_minor,
+           currency = EXCLUDED.currency,
            sale_status = EXCLUDED.sale_status`,
-        [evt.id, evt.title, evt.venue, evt.daysOffset, evt.totalSeats, evt.priceMinor, status]
+        [evt.id, evt.title, evt.venue, evt.daysOffset, evt.totalSeats, evt.priceMinor, evt.currency, status]
       );
 
       // 2. Seed event_control
@@ -135,57 +234,32 @@ export async function seedInitialData(
         );
       }
 
-      // 3.5 Ensure 156 Circular Seats with exact labels exist independently for each event
-      const circularLabels = getCircularSeatLabels();
-      for (let s = 1; s <= circularLabels.length; s++) {
-        const lbl = circularLabels[s - 1];
-        const sid = `seat_${evt.id}_${lbl}`;
-        await client.query(
-          `INSERT INTO seats (seat_id, event_id, label, status, version)
-           VALUES ($1, $2, $3, 'AVAILABLE', 0)
-           ON CONFLICT (event_id, label) DO NOTHING`,
-          [sid, evt.id, lbl]
-        );
-      }
+      // 4. Ensure EXACT matching auditorium seats exist for this event
+      const eventLabels = getEventSeatLabels(evt.id, evt.totalSeats);
+      console.log(`[Seed] Generating ${eventLabels.length} exact auditorium seats for ${evt.id}...`);
 
-      // 4. Seed Seats in batches for efficiency
-      const existingSeats = await client.query(
-        `SELECT COUNT(*) as count FROM seats WHERE event_id = $1`,
-        [evt.id]
-      );
-      const existingCount = parseInt(existingSeats.rows[0].count, 10);
+      // Clear any outdated seats for this event so counts match exactly
+      await client.query(`DELETE FROM seats WHERE event_id = $1`, [evt.id]);
 
-      if (existingCount < evt.totalSeats) {
-        console.log(`[Seed] Generating seats for ${evt.id} (${existingCount + 1} to ${evt.totalSeats})...`);
-        const batchSize = 1000;
-        for (let i = existingCount + 1; i <= evt.totalSeats; i += batchSize) {
-          const end = Math.min(i + batchSize - 1, evt.totalSeats);
-          const values: any[] = [];
-          const placeholders: string[] = [];
+      const batchSize = 250;
+      for (let i = 0; i < eventLabels.length; i += batchSize) {
+        const batch = eventLabels.slice(i, i + batchSize);
+        const placeholders: string[] = [];
+        const values: any[] = [];
+        let pIdx = 1;
 
-          const circularLabels = getCircularSeatLabels();
-          let pIdx = 1;
-          for (let s = i; s <= end; s++) {
-            let label: string;
-            let seatId: string;
-            if (s <= circularLabels.length) {
-              label = circularLabels[s - 1];
-              seatId = `seat_${evt.id}_${label}`;
-            } else {
-              label = `UG-SEC-${s.toString().padStart(5, '0')}`;
-              seatId = `seat_${evt.id}_${s.toString().padStart(5, '0')}`;
-            }
-            placeholders.push(`($${pIdx++}, $${pIdx++}, $${pIdx++}, 'AVAILABLE', 0)`);
-            values.push(seatId, evt.id, label);
-          }
-
-          const insertSeatsSql = `
-            INSERT INTO seats (seat_id, event_id, label, status, version)
-            VALUES ${placeholders.join(', ')}
-            ON CONFLICT (event_id, label) DO NOTHING;
-          `;
-          await client.query(insertSeatsSql, values);
+        for (const lbl of batch) {
+          const sid = `seat_${evt.id}_${lbl}`;
+          placeholders.push(`($${pIdx++}, $${pIdx++}, $${pIdx++}, 'AVAILABLE', 0)`);
+          values.push(sid, evt.id, lbl);
         }
+
+        const insertSeatsSql = `
+          INSERT INTO seats (seat_id, event_id, label, status, version)
+          VALUES ${placeholders.join(', ')}
+          ON CONFLICT (event_id, label) DO NOTHING;
+        `;
+        await client.query(insertSeatsSql, values);
       }
     }
 
